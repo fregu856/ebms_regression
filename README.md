@@ -21,8 +21,7 @@ TODO!
 
 ## Acknowledgements
 
-- The depthCompletion code is based on the implementation by [@fangchangma](https://github.com/fangchangma) found [here](https://github.com/fangchangma/self-supervised-depth-completion).
-- The segmentation code is based on the implementation by [@PkuRainBow](https://github.com/PkuRainBow) found [here](https://github.com/PkuRainBow/OCNet.pytorch), which in turn utilizes [inplace_abn](https://github.com/mapillary/inplace_abn) by [@mapillary](https://github.com/mapillary).
+- TODO!
 
 
 
@@ -34,16 +33,12 @@ TODO!
 
 ## Index
 - [Usage](#usage)
-- - [depthCompletion](#depthcompletion)
-- - [segmentation](#segmentation)
-- - [toyRegression](#toyregression)
-- - [toyClassification](#toyclassification)
+- - [1D Regression](#1dregression)
+- - [Object Detection](#detection)
 - [Documentation](#documentation)
-- - [depthCompletion](#documentationdepthcompletion)
-- - [segmentation](#documentationsegmentation)
-- - [toyRegression](#documentationtoyregression)
-- - [toyClassification](#documentationtoyclassification)
-- [Pretrained models](#pretrained-models)
+- - [1D Regression](#documentation1dregression)
+- - [Object Detection](#documentationdetection)
+- [Pretrained model](#pretrained-model)
 ***
 ***
 ***
@@ -64,17 +59,15 @@ TODO!
 
 The code has been tested on Ubuntu 16.04. Docker images are provided (see below).
 
-- [depthCompletion](#depthcompletion)
-- [segmentation](#segmentation)
-- [toyRegression](#toyregression)
-- [toyClassification](#toyclassification)
+- [1D Regression](#1dregression)
+- [Object Detection](#detection)
 
 
 
 
 
 
-### depthCompletion
+### 1dregression
 
 - $ sudo docker pull fregu856/evaluating_bdl:pytorch_pytorch_0.4_cuda9_cudnn7_evaluating_bdl
 - Create _start_docker_image_toyProblems_depthCompletion.sh_ containing (My username on the server is _fregu482_, i.e., my home folder is _/home/fregu482_. You will have to modify this accordingly):
@@ -104,25 +97,149 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - To get back into a running image:
 - - - $ sudo docker attach toyProblems_depthCompletion_GPU0
 
+- Example usage:
+```
+TODO!
+```
+***
+***
+***
 
 
-- Download the [KITTI depth completion](http://www.cvlibs.net/datasets/kitti/eval_depth.php?benchmark=depth_completion) dataset (_data_depth_annotated.zip_, _data_depth_selection.zip_ and _data_depth_velodyne.zip_) and place it in _/root/data/kitti_depth_ (_/root/data/kitti_depth_ should contain the folders _train_, _val_ and _depth_selection_).
-
-- Create _/root/data/kitti_raw_ and download the [KITTI raw](http://www.cvlibs.net/datasets/kitti/raw_data.php) dataset using [download_kitti_raw.py](https://github.com/fregu856/evaluating_bdl/blob/master/depthCompletion/utils/download_kitti_raw.py).
-
-- Create _/root/data/kitti_rgb_. For each folder in _/root/data/kitti_depth/train_ (e.g. _2011_09_26_drive_0001_sync_), copy the corresponding folder in _/root/data/kitti_raw_ and place it in _/root/data/kitti_rgb/train_.
 
 
-- Download the [virtual KITTI](https://europe.naverlabs.com/Research/Computer-Vision/Proxy-Virtual-Worlds/) dataset (_vkitti_1.3.1_depthgt.tar_ and _vkitti_1.3.1_rgb.tar_) and place in _/root/data/virtualkitti_ (_/root/data/virtualkitti_ should contain the folders _vkitti_1.3.1_depthgt_ and _vkitti_1.3.1_rgb_).
 
+
+
+
+
+
+
+### detection
+
+- $ sudo docker pull fregu856/evaluating_bdl:rainbowsecret_pytorch04_20180905_evaluating_bdl
+- Create _start_docker_image_segmentation.sh_ containing (My username on the server is _fregu482_, i.e., my home folder is _/home/fregu482_. You will have to modify this accordingly):
+```      
+#!/bin/bash
+
+# DEFAULT VALUES
+GPUIDS="0,1"
+NAME="segmentation_GPU"
+
+NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
+        -p 5900:5900 \
+        --name "$NAME""01" \
+        -v /home/fregu482:/home/ \
+        fregu856/evaluating_bdl:rainbowsecret_pytorch04_20180905_evaluating_bdl bash
+```
+- (Inside the image, _/home/_ will now be mapped to _/home/fregu482_, i.e., $ cd home takes you to the regular home folder)
+- (To create more containers, change the lines _GPUIDS="0,1"_, _--name "$NAME""01"_ and _-p 5900:5900_)
+- General Docker usage:
+- - To start the image:
+- - - $ sudo sh start_docker_image_segmentation.sh
+- - To commit changes to the image:
+- - - Open a new terminal window.
+- - - $ sudo docker commit segmentation_GPU01 fregu856/evaluating_bdl:rainbowsecret_pytorch04_20180905_evaluating_bdl
+- - To exit the image without killing running code:
+- - - Ctrl + P + Q
+- - To get back into a running image:
+- - - $ sudo docker attach segmentation_GPU01
+
+
+- TODO!
 
 
 - Example usage:
 ```
-$ sudo sh start_docker_image_toyProblems_depthCompletion.sh
-$ cd --
-$ python evaluating_bdl/depthCompletion/ensembling_train_virtual.py
+TODO!
 ```
 ***
 ***
 ***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+***
+***
+***
+## Documentation
+
+- [1D Regression](#documentation1dregression)
+- [Object Detection](#documentationdetection)
+
+
+
+
+
+### Documentation/1dregression
+
+- Example usage:
+```
+TODO!
+```
+
+- TODO!
+***
+***
+***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Documentation/detection
+
+- Example usage:
+```
+TODO!
+```
+
+- TODO!
+***
+***
+***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+***
+***
+***
+## Pretrained model
+
+- TODO!
