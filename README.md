@@ -156,36 +156,36 @@ $ python ebms_regression/1dregression/1/nce+_train.py
 
 ### detection
 
-- $ sudo docker pull fregu856/evaluating_bdl:rainbowsecret_pytorch04_20180905_evaluating_bdl
-- Create _start_docker_image_segmentation.sh_ containing (My username on the server is _fregu482_, i.e., my home folder is _/home/fregu482_. You will have to modify this accordingly):
-```      
+- $ docker pull fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
+- Create _start_docker_image_ebms_regression.sh_ containing (My username on the server is _fregu482_, i.e., my home folder is _/home/fregu482_. You will have to modify this accordingly):
+```
 #!/bin/bash
 
 # DEFAULT VALUES
-GPUIDS="0,1"
-NAME="segmentation_GPU"
+GPUIDS="0"
+NAME="ebms_regression_GPU"
 
 NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
-        -p 5900:5900 \
-        --name "$NAME""01" \
-        -v /home/fregu482:/home/ \
-        fregu856/evaluating_bdl:rainbowsecret_pytorch04_20180905_evaluating_bdl bash
+        -p 7200:7200\
+        --name "$NAME""0" \
+        -v /home/fregu482:/root/ \
+        fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression bash
 ```
-- (Inside the image, _/home/_ will now be mapped to _/home/fregu482_, i.e., $ cd home takes you to the regular home folder)
-- (To create more containers, change the lines _GPUIDS="0,1"_, _--name "$NAME""01"_ and _-p 5900:5900_)
+- (Inside the image, _/root/_ will now be mapped to _/home/fregu482_, i.e., $ cd -- takes you to the regular home folder)
+- (To create more containers, change the lines _GPUIDS="0"_, _--name "$NAME""0"_ and _-p 7200:7200_)
 - General Docker usage:
 - - To start the image:
-- - - $ sudo sh start_docker_image_segmentation.sh
+- - - $ sh start_docker_image_ebms_regression.sh
 - - To commit changes to the image:
 - - - Open a new terminal window.
-- - - $ sudo docker commit segmentation_GPU01 fregu856/evaluating_bdl:rainbowsecret_pytorch04_20180905_evaluating_bdl
+- - - $ docker commit ebms_regression_GPU0 fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
 - - To exit the image without killing running code:
 - - - Ctrl + P + Q
 - - To get back into a running image:
-- - - $ sudo docker attach segmentation_GPU01
+- - - $ docker attach ebms_regression_GPU0
 
 
-- TODO!
+- TODO! (download datasets and pretrained detector)
 
 
 - Example usage:
