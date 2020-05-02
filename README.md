@@ -15,6 +15,270 @@ If you find this work useful, please consider citing:
 TODO!
 ```
 
-### Code coming soon.
+### Code is coming soon!
+
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
+***
 
 
+
+## Acknowledgements
+
+- TODO!
+
+
+
+
+
+
+
+
+
+## Index
+- [Usage](#usage)
+- - [1D Regression](#1dregression)
+- - [Object Detection](#detection)
+- [Documentation](#documentation)
+- - [1D Regression](#documentation1dregression)
+- - [Object Detection](#documentationdetection)
+- [Pretrained model](#pretrained-model)
+***
+***
+***
+
+
+
+
+
+
+
+
+
+
+***
+***
+***
+## Usage
+
+The code has been tested on Ubuntu 16.04. A docker image is provided (see below).
+
+- [1D Regression](#1dregression)
+- [Object Detection](#detection)
+
+
+
+
+
+
+### 1dregression
+
+- $ docker pull fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
+- Create _start_docker_image_ebms_regression.sh_ containing (My username on the server is _fregu482_, i.e., my home folder is _/home/fregu482_. You will have to modify this accordingly):
+```
+#!/bin/bash
+
+# DEFAULT VALUES
+GPUIDS="0"
+NAME="ebms_regression_GPU"
+
+NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
+        -p 7200:7200\
+        --name "$NAME""0" \
+        -v /home/fregu482:/root/ \
+        fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression bash
+```
+- (Inside the image, _/root/_ will now be mapped to _/home/fregu482_, i.e., $ cd -- takes you to the regular home folder)
+- (To create more containers, change the lines _GPUIDS="0"_, _--name "$NAME""0"_ and _-p 7200:7200_)
+- General Docker usage:
+- - To start the image:
+- - - $ sh start_docker_image_ebms_regression.sh
+- - To commit changes to the image:
+- - - Open a new terminal window.
+- - - $ docker commit ebms_regression_GPU0 fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
+- - To exit the image without killing running code:
+- - - Ctrl + P + Q
+- - To get back into a running image:
+- - - $ docker attach ebms_regression_GPU0
+
+- Example usage:
+```
+$ sh start_docker_image_ebms_regression.sh
+$ cd --
+$ python ebms_regression/1dregression/1/nce+_train.py 
+```
+***
+***
+***
+
+
+
+
+
+
+
+
+
+
+
+### detection
+
+- $ docker pull fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
+- Create _start_docker_image_ebms_regression.sh_ containing (My username on the server is _fregu482_, i.e., my home folder is _/home/fregu482_. You will have to modify this accordingly):
+```
+#!/bin/bash
+
+# DEFAULT VALUES
+GPUIDS="0"
+NAME="ebms_regression_GPU"
+
+NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
+        -p 7200:7200\
+        --name "$NAME""0" \
+        -v /home/fregu482:/root/ \
+        fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression bash
+```
+- (Inside the image, _/root/_ will now be mapped to _/home/fregu482_, i.e., $ cd -- takes you to the regular home folder)
+- (To create more containers, change the lines _GPUIDS="0"_, _--name "$NAME""0"_ and _-p 7200:7200_)
+- General Docker usage:
+- - To start the image:
+- - - $ sh start_docker_image_ebms_regression.sh
+- - To commit changes to the image:
+- - - Open a new terminal window.
+- - - $ docker commit ebms_regression_GPU0 fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
+- - To exit the image without killing running code:
+- - - Ctrl + P + Q
+- - To get back into a running image:
+- - - $ docker attach ebms_regression_GPU0
+
+
+- TODO! (download datasets and pretrained detector)
+
+
+- Example usage:
+```
+TODO!
+```
+***
+***
+***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+***
+***
+***
+## Documentation
+
+- [1D Regression](#documentation1dregression)
+- [Object Detection](#documentationdetection)
+
+
+
+
+
+### Documentation/1dregression
+
+- Example usage:
+```
+TODO!
+```
+
+- TODO!
+***
+***
+***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Documentation/detection
+
+- Example usage:
+```
+TODO!
+```
+
+- TODO!
+***
+***
+***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+***
+***
+***
+## Pretrained model
+
+- TODO!
