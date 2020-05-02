@@ -94,7 +94,7 @@ class ToyDataset(torch.utils.data.Dataset):
         plt.ylabel("y")
         plt.xlabel("x")
         plt.ylim([-1.5, 1.5])
-        plt.savefig("/root/ebms_regression/1degression/1/ground_truth.png")
+        plt.savefig("/root/ebms_regression/1dregression/1/ground_truth.png")
         plt.close(1)
         ########################################################################
 

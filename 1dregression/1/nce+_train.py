@@ -1,3 +1,5 @@
+# camera-ready
+
 from datasets import ToyDataset # (this needs to be imported before torch, because cv2 needs to be imported before torch for some reason)
 from model import ToyNet
 
@@ -18,7 +20,7 @@ import matplotlib.pyplot as plt
 import cv2
 
 # NOTE! change this to not overwrite all log data when you train the model:
-model_id = "paper1_2-nce+4"
+model_id = "1-nce+"
 
 num_epochs = 75
 batch_size = 32
@@ -63,7 +65,6 @@ def sample_gmm_centered(std, num_samples=1):
 
     return x_centered, prob_dens, prob_dens_zero
 
-print ("updated")
 def sample_gmm_centered2(beta, std, num_samples=1):
     num_components = std.shape[-1]
     num_dims = std.numel() // num_components
@@ -95,10 +96,9 @@ print ("num_train_batches:", num_train_batches)
 
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 
-# num_models = 10
 num_models = 20
 for i in range(num_models):
-    network = ToyNet(model_id + "_%d" % i, project_dir="/root/project3/toyRegression").cuda()
+    network = ToyNet(model_id + "_%d" % i, project_dir="/root/ebms_regression/1dregression").cuda()
 
     optimizer = torch.optim.Adam(network.parameters(), lr=learning_rate)
 
@@ -115,24 +115,10 @@ for i in range(num_models):
             xs = xs.cuda().unsqueeze(1) # (shape: (batch_size, 1))
             ys = ys.cuda().unsqueeze(1) # (shape: (batch_size, 1))
 
-
-
-            # y_samples_0_zero, q_y_samples_0, _ = sample_gmm_centered(beta*stds, num_samples=1)
-            # y_samples_0_zero = y_samples_0_zero.cuda() # (shape: (1, 1))
-            # q_y_samples_0 = q_y_samples_0.cuda() # (shape: (1))
-            # y_samples_0 = ys + y_samples_0_zero # (shape: (batch_size, 1))
-            # y_samples_0_zero, _, _ = sample_gmm_centered(beta*stds, num_samples=1)
-            # q_y_samples_0 = gmm_density_centered(y_samples_0_zero, stds)
-            # y_samples_0_zero = y_samples_0_zero.cuda() # (shape: (1, 1))
-            # q_y_samples_0 = q_y_samples_0.cuda() # (shape: (1))
-            # y_samples_0 = ys + y_samples_0_zero # (shape: (batch_size, 1))
             y_samples_0_zero, q_y_samples_0, _ = sample_gmm_centered2(beta, stds, num_samples=1)
             y_samples_0_zero = y_samples_0_zero.cuda() # (shape: (1, 1))
             q_y_samples_0 = q_y_samples_0.cuda() # (shape: (1))
             y_samples_0 = ys + y_samples_0_zero # (shape: (batch_size, 1))
-
-
-
 
             x_features = network.feature_net(xs) # (shape: (batch_size, hidden_dim))
             scores_samples_0 = network.predictor_net(x_features, y_samples_0) # (shape: (batch_size, 1))
