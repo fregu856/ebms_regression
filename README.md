@@ -15,7 +15,7 @@ If you find this work useful, please consider citing:
 TODO!
 ```
 
-### Code is coming soon.
+### Code is coming soon!
 
 ***
 ***
