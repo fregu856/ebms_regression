@@ -1,3 +1,5 @@
+# camera-ready
+
 from datasets import ToyDatasetEval # (this needs to be imported before torch, because cv2 needs to be imported before torch for some reason)
 from model import ToyNet
 
@@ -19,13 +21,13 @@ batch_size = 32
 num_samples = 2048
 num_plot_samples = 1
 
-model_id = "paper1_2-kldis"
+model_id = "1-kldis"
 
-network = ToyNet(model_id, project_dir="/root/project3/toyRegression").cuda()
+network = ToyNet(model_id, project_dir="/root/ebms_regression/1dregression").cuda()
 
 epoch = 75
 
-network.load_state_dict(torch.load("/root/project3/toyRegression/training_logs/model_%s_0/checkpoints/model_%s_epoch_%d.pth" % (model_id, model_id, epoch)))
+network.load_state_dict(torch.load("/root/ebms_regression/1dregression/training_logs/model_%s_0/checkpoints/model_%s_epoch_%d.pth" % (model_id, model_id, epoch)))
 
 val_dataset = ToyDatasetEval()
 

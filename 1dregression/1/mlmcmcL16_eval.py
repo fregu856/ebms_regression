@@ -1,3 +1,5 @@
+# camera-ready
+
 from datasets import ToyDatasetEvalKL # (this needs to be imported before torch, because cv2 needs to be imported before torch for some reason)
 from model import ToyNet
 
@@ -18,13 +20,13 @@ batch_size = 32
 
 num_samples = 2048
 
-model_id = "paper1_2-langevinL1"
+model_id = "1-mlmcmcL16"
 epoch = 75
-num_models = 10
+num_models = 20
 
 epsilon = 1.0e-30
 
-with open("/root/project3/toyRegression/paper1/gt_x_values_2_scores.pkl", "rb") as file: # (needed for python3)
+with open("/root/ebms_regression/1dregression/1/gt_x_values_2_scores.pkl", "rb") as file: # (needed for python3)
     gt_x_values_2_scores = pickle.load(file)
 
 val_dataset = ToyDatasetEvalKL()
@@ -38,9 +40,9 @@ torch.autograd.set_grad_enabled(False)
 
 KL_values = []
 for model_i in range(num_models):
-    network = ToyNet(model_id, project_dir="/root/project3/toyRegression").cuda()
+    network = ToyNet(model_id, project_dir="/root/ebms_regression/1dregression").cuda()
 
-    network.load_state_dict(torch.load("/root/project3/toyRegression/training_logs/model_%s_%d/checkpoints/model_%s_epoch_%d.pth" % (model_id, model_i, model_id, epoch)))
+    network.load_state_dict(torch.load("/root/ebms_regression/1dregression/training_logs/model_%s_%d/checkpoints/model_%s_epoch_%d.pth" % (model_id, model_i, model_id, epoch)))
 
     x_values = []
     x_values_2_scores = {}

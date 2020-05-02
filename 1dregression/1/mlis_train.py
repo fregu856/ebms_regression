@@ -1,3 +1,5 @@
+# camera-ready
+
 from datasets import ToyDataset # (this needs to be imported before torch, because cv2 needs to be imported before torch for some reason)
 from model import ToyNet
 
@@ -71,10 +73,9 @@ print ("num_train_batches:", num_train_batches)
 
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 
-# num_models = 10
 num_models = 20
 for i in range(num_models):
-    network = ToyNet(model_id + "_%d" % i, project_dir="/root/project3/toyRegression").cuda()
+    network = ToyNet(model_id + "_%d" % i, project_dir="/root/ebms_regression/1dregression").cuda()
 
     optimizer = torch.optim.Adam(network.parameters(), lr=learning_rate)
 
