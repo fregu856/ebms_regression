@@ -94,7 +94,7 @@ TODO!
 ***
 ## Usage
 
-The code has been tested on Ubuntu 16.04. Docker images are provided (see below).
+The code has been tested on Ubuntu 16.04. A docker image is provided (see below).
 
 - [1D Regression](#1dregression)
 - [Object Detection](#detection)
@@ -106,37 +106,39 @@ The code has been tested on Ubuntu 16.04. Docker images are provided (see below)
 
 ### 1dregression
 
-- $ sudo docker pull fregu856/evaluating_bdl:pytorch_pytorch_0.4_cuda9_cudnn7_evaluating_bdl
-- Create _start_docker_image_toyProblems_depthCompletion.sh_ containing (My username on the server is _fregu482_, i.e., my home folder is _/home/fregu482_. You will have to modify this accordingly):
+- $ docker pull fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
+- Create _start_docker_image_ebms_regression.sh_ containing (My username on the server is _fregu482_, i.e., my home folder is _/home/fregu482_. You will have to modify this accordingly):
 ```
 #!/bin/bash
 
 # DEFAULT VALUES
 GPUIDS="0"
-NAME="toyProblems_depthCompletion_GPU"
+NAME="ebms_regression_GPU"
 
 NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
-        -p 5700:5700\
+        -p 7200:7200\
         --name "$NAME""0" \
         -v /home/fregu482:/root/ \
-        fregu856/evaluating_bdl:pytorch_pytorch_0.4_cuda9_cudnn7_evaluating_bdl bash
+        fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression bash
 ```
 - (Inside the image, _/root/_ will now be mapped to _/home/fregu482_, i.e., $ cd -- takes you to the regular home folder)
-- (To create more containers, change the lines _GPUIDS="0"_, _--name "$NAME""0"_ and _-p 5700:5700_)
+- (To create more containers, change the lines _GPUIDS="0"_, _--name "$NAME""0"_ and _-p 7200:7200_)
 - General Docker usage:
 - - To start the image:
-- - - $ sudo sh start_docker_image_toyProblems_depthCompletion.sh
+- - - $ sh start_docker_image_ebms_regression.sh
 - - To commit changes to the image:
 - - - Open a new terminal window.
-- - - $ sudo docker commit toyProblems_depthCompletion_GPU0 fregu856/evaluating_bdl:pytorch_pytorch_0.4_cuda9_cudnn7_evaluating_bdl
+- - - $ docker commit ebms_regression_GPU0 fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
 - - To exit the image without killing running code:
 - - - Ctrl + P + Q
 - - To get back into a running image:
-- - - $ sudo docker attach toyProblems_depthCompletion_GPU0
+- - - $ docker attach ebms_regression_GPU0
 
 - Example usage:
 ```
-TODO!
+$ sh start_docker_image_ebms_regression.sh
+$ cd --
+$ python ebms_regression/1dregression/1/nce+_train.py 
 ```
 ***
 ***
