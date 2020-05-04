@@ -298,10 +298,25 @@ TODO!
 - - $ sh start_docker_image_ebms_regression.sh
 - - $ cd --
 - - $ cd ebms_regression/detection
-- - $ python tools/train_net.py --config-file "configs/nce+_eval_pretrained_val.yaml"
+- - $ python tools/test_net.py --config-file "configs/nce+_eval_pretrained_val.yaml"
 - - Expected output:
 ```
-TODO! TODO!
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.394
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.580
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.426
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.222
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.426
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.519
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.327
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.526
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.554
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.351
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.587
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.709
+2020-05-04 12:40:08,206 maskrcnn_benchmark.inference INFO: 
+Task: bbox
+AP, AP50, AP75, APs, APm, APl
+0.3936, 0.5799, 0.4263, 0.2220, 0.4257, 0.5188
 ```
 *
 - Evaluate pretrained model on 2017 test-dev:
@@ -309,7 +324,7 @@ TODO! TODO!
 - - $ sh start_docker_image_ebms_regression.sh
 - - $ cd --
 - - $ cd ebms_regression/detection
-- - $ python tools/train_net.py --config-file "configs/nce+_eval_pretrained_test-dev.yaml"
+- - $ python tools/test_net.py --config-file "configs/nce+_eval_pretrained_test-dev.yaml"
 - - TODO!
 - - Expected output:
 ```
