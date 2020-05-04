@@ -1236,6 +1236,132 @@ class LossComputation_dsm(object): #############################################
 
         return loss
 
+class LossComputation_mlmcmc(object): #########################################################################
+    """
+    """
+
+    def __init__(
+        self,
+        num_proposal=128,
+        gt_sigma=(0.125, 0.125),
+        proposal_sigma=((0.125, 0.125), (0.25, 0.25), (0.5, 0.5), (1.0, 1.0)),
+        cls_agnostic_iou_pred=False,
+        exp_clamp=None
+    ):
+        self.num_proposal = num_proposal
+        self.gt_sigma = gt_sigma
+        self.proposal_sigma = proposal_sigma
+        self.cls_agnostic_iou_pred = cls_agnostic_iou_pred
+        self.exp_clamp = exp_clamp
+
+    def copy_targets(self, gt_boxes): ######################################################
+        """
+        :param gt_boxes: BoxList containining the gt boxes for each image
+        :return:
+        """
+        orig_mode_list = [b.mode for b in gt_boxes]
+        gt_boxes = [b.convert('xywh') for b in gt_boxes]
+
+        proposal_density_list = []
+        gt_density_list = []
+
+        jittered_boxes = []
+        for gt_b in gt_boxes:
+            device = gt_b.bbox.device
+            b = gt_b.bbox.view(-1, 4).cpu()
+            labels = gt_b.get_field("labels")
+
+            out_boxes_list = []
+
+            for i in range(b.shape[0]):
+                proposals, proposal_density, gt_density = sample_box_gmm(b[i, :], ((1.0e-12, 1.0e-12), (1.0e-12, 1.0e-12)), self.gt_sigma,
+                                                                         self.num_proposal-1, True)
+
+                proposals = proposals.to(device)
+                proposal_density = proposal_density.to(device)
+                gt_density = gt_density.to(device)
+
+                out_boxes_list.append(proposals)
+                proposal_density_list.append(proposal_density)
+                gt_density_list.append(gt_density)
+
+            out_boxes_t = torch.cat(out_boxes_list, dim=0)
+
+            new_box = BoxList(out_boxes_t, image_size=gt_b.size, mode='xywh')
+            labels = labels.view(-1, 1).repeat(1, self.num_proposal)
+            new_box.add_field("labels", labels.view(-1))
+
+            jittered_boxes.append(new_box)
+
+        jittered_boxes = [b.convert(m) for b, m in zip(jittered_boxes, orig_mode_list)]
+
+        # TODO is this safe?
+        self._proposal_density = torch.cat(proposal_density_list, dim=0)
+        self._gt_density = torch.cat(gt_density_list, dim=0)
+        self._proposals = jittered_boxes
+
+        # TODO check output distribution
+        return jittered_boxes
+
+    def __call__(self, fs, f_samples, target_labels): ##############################################################
+        """
+        Computes the loss for Faster R-CNN.
+        This requires that the subsample method has been called beforehand.
+
+        Arguments:
+            class_logits (list[Tensor])
+            box_regression (list[Tensor])
+
+        Returns:
+            classification_loss (Tensor)
+            box_loss (Tensor)
+        """
+
+        # print ("__call__ - 1")
+
+        # (fs has shape: (num_gt_bboxes_in_batch))
+        # (f_samples has shape: (num_gt_bboxes_in_batch*M))
+        # (target_labels has shape: (num_gt_bboxes_in_batch))
+        # print (fs.size())
+        # print (f_samples.size())
+        # print (target_labels.size())
+
+        device = fs.device
+
+        # print ("__call__ - 2")
+
+        labels = cat([proposal.get_field("labels") for proposal in self._proposals], dim=0).long() # (shape: (num_gt_bboxes_in_batch*M))
+        # print (labels.size())
+
+        # print ("__call__ - 3")
+
+        samples_pos_inds_subset = torch.nonzero(labels > 0).squeeze(1) # (shape: (num_gt_bboxes_in_batch*M)) (it seems)
+        # print (samples_pos_inds_subset.size())
+
+        target_pos_inds_subset = torch.nonzero(target_labels > 0).squeeze(1) # (shape: (num_gt_bboxes_in_batch)) (it seems)
+        # print (target_pos_inds_subset.size())
+
+        # print ("__call__ - 4")
+
+        fs = fs[target_pos_inds_subset] # (shape: (num_gt_bboxes_in_batch))
+        # print (fs.size())
+
+        f_samples = f_samples[samples_pos_inds_subset] # (shape: (num_gt_bboxes_in_batch*M))
+        # print (f_samples.size())
+        f_samples = f_samples.view(-1, self.num_proposal) # (shape: (num_gt_bboxes_in_batch, M))
+        # print (f_samples.size())
+
+        # print ("__call__ - 5")
+
+        loss = torch.mean(f_samples, dim=1) - fs # (shape: (num_gt_bboxes_in_batch))
+        # print (loss.size())
+
+        loss = torch.mean(loss)
+
+        # print ("__call__ - 6")
+
+        return loss
+
 
 def make_roi_iou_loss_evaluator(cfg):
     num_proposal = cfg.MODEL.ROI_IOU_HEAD.NUM_TRAIN_PROPOSALS
@@ -1270,6 +1396,13 @@ def make_roi_iou_loss_evaluator(cfg):
                                               )
     elif loss_type == "DSM":
         loss_evaluator = LossComputation_dsm(num_proposal=num_proposal,
+                                              gt_sigma=gt_sigma,
+                                              proposal_sigma=proposal_sigma,
+                                              cls_agnostic_iou_pred=cls_agnostic_iou_pred,
+                                              exp_clamp=None
+                                              )
+    elif loss_type == "ML-MCMC":
+        loss_evaluator = LossComputation_mlmcmc(num_proposal=num_proposal,
                                               gt_sigma=gt_sigma,
                                               proposal_sigma=proposal_sigma,
                                               cls_agnostic_iou_pred=cls_agnostic_iou_pred,

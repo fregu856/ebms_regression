@@ -1,0 +1,57 @@
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  WEIGHT: "/root/ebms_regression/detection/pretrained_models/e2e_faster_R-50-FPN_1x.pkl"
+  TRAIN_BBREG_ON: False
+  TRAIN_RPN: False
+  TRAIN_BACKBONE: False
+  BACKBONE:
+    CONV_BODY: "R-50-FPN"
+    FREEZE_CONV_BODY_AT: 4
+  RESNETS:
+    BACKBONE_OUT_CHANNELS: 256
+  RPN:
+    USE_FPN: True
+    ANCHOR_STRIDE: (4, 8, 16, 32, 64)
+    PRE_NMS_TOP_N_TRAIN: 2000
+    PRE_NMS_TOP_N_TEST: 1000
+    POST_NMS_TOP_N_TEST: 1000
+    FPN_POST_NMS_TOP_N_TEST: 1000
+  IOU_PRED_ON: True
+  ROI_HEADS:
+    USE_FPN: True
+  ROI_BOX_HEAD:
+    PERFORM_FILTERING: False
+    POOLER_TYPE: "roi_align"
+    POOLER_RESOLUTION: 7
+    POOLER_SCALES: (0.25, 0.125, 0.0625, 0.03125)
+    POOLER_SAMPLING_RATIO: 2
+    FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
+    PREDICTOR: "FPNPredictor"
+  ROI_IOU_HEAD:
+    LOSS_TYPE: "ML-MCMC"
+    STEP_LENGTH: (5e-5, 2e-4)
+    NUM_REFINE_ITER: 5
+    GT_SIGMA: (0.0, 0.0)
+    PROPOSAL_SIGMA: ((0.05, 0.05), (0.1, 0.1), (0.2, 0.2))
+    PERFORM_FILTERING: True
+    POOLER_TYPE: "prpool"
+    POOLER_RESOLUTION: 7
+    POOLER_SCALES: (0.25, 0.125, 0.0625, 0.03125)
+    FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
+    PREDICTOR: "IoUNetPredictor"
+    NUM_TRAIN_PROPOSALS: 128
+    LANGEVIN_L: 8
+    LANGEVIN_alpha: 0.00001
+DATASETS:
+  TRAIN: ("coco_2017_train",)
+  TEST: ("coco_2017_val",)
+DATALOADER:
+  NUM_WORKERS: 8
+  SIZE_DIVISIBILITY: 32
+SOLVER:
+  IMS_PER_BATCH: 16
+  BASE_LR: 0.001
+  WEIGHT_DECAY: 0.0001
+  STEPS: (40000, 50000)
+  MAX_ITER: 60000
+OUTPUT_DIR: "/root/ebms_regression/detection/checkpoints/mlmcmcL8"
