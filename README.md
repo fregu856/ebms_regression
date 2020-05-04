@@ -327,8 +327,7 @@ TODO!
 
 - Object detection model trained with NCE+: https://drive.google.com/open?id=1F7QoRJpbWQOWprD1Zefp050Ua8MYVFLW.
 *
-*
-- Evaluate on 2017 val:
+- Evaluate pretrained model on 2017 val:
 - - Download the file nce+_model_0060000.pth from above and place in detection/pretrained_models.
 - - $ sh start_docker_image_ebms_regression.sh
 - - $ cd --
@@ -339,8 +338,7 @@ TODO!
 TODO! TODO!
 ```
 *
-*
-- Evaluate on 2017 test-dev:
+- Evaluate pretrained model on 2017 test-dev:
 - - Download the file nce+_model_0060000.pth from above and place in detection/pretrained_models.
 - - $ sh start_docker_image_ebms_regression.sh
 - - $ cd --
