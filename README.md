@@ -185,8 +185,8 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - - $ docker attach ebms_regression_GPU0
 *
 *
-Download the COCO dataset:
-- TODO! (download datasets and pretrained detector)
+- Download the COCO dataset:
+- - TODO! (download datasets and pretrained detector)
 *
 *
 - Download pretrained Faster-RCNN detector (e2e_faster_R-50-FPN_1x.pkl) from https://drive.google.com/open?id=1Ows6VAPH5i5Y-gL9uHDa1SASZ0WQmxOj and place in detection/pretrained_models.
