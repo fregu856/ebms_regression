@@ -1,6 +1,6 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  WEIGHT: "/root/ebms_regression/detection/checkpoints/nce+/model_0060000.pth"
+  WEIGHT: "/root/ebms_regression/detection/pretrained_models/nce+_model_0060000.pth"
   TRAIN_BBREG_ON: False
   TRAIN_RPN: False
   TRAIN_BACKBONE: False
@@ -53,4 +53,4 @@ SOLVER:
   WEIGHT_DECAY: 0.0001
   STEPS: (40000, 50000)
   MAX_ITER: 60000
-OUTPUT_DIR: "/root/ebms_regression/detection/checkpoints/nce+_eval_test-dev"
+OUTPUT_DIR: "/root/ebms_regression/detection/checkpoints/nce+_eval_pretrained_test-dev"

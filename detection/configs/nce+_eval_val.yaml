@@ -1,6 +1,5 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  # WEIGHT: "/root/ebms_regression/detection/pretrained_models/nce+_model_0060000.pth"
   WEIGHT: "/root/ebms_regression/detection/checkpoints/nce+/model_0060000.pth"
   TRAIN_BBREG_ON: False
   TRAIN_RPN: False
