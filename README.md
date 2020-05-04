@@ -275,8 +275,8 @@ $ python tools/test_net.py --config-file "configs/nce+_eval_val.yaml"
 $ python tools/test_net.py --config-file "configs/nce+_eval_test-dev.yaml"
 ```
 
-- detection/configs contains all config files needed to train a model using ML-IS, ML-MCMC-8, KLD-IS, NCE, DSM or NCE+. It also contains all config files needed to evaluate such a trained model on 2017 val or 2017 test-dev.
-
+- **detection/configs** contains all config files needed to train a model using ML-IS, ML-MCMC-8, KLD-IS, NCE, DSM or NCE+. It also contains all config files needed to evaluate such a trained model on 2017 val or 2017 test-dev.
+- **detection/maskrcnn_benchmark/modeling/roi_heads/iou_head/iou_head.py**: TODO! TODO!
 
 - TODO!
 
