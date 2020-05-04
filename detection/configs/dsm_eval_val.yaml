@@ -1,6 +1,7 @@
 MODEL:
   META_ARCHITECTURE: "GeneralizedRCNN"
-  WEIGHT: "/root/ebms_regression/detection/pretrained_models/e2e_faster_R-50-FPN_1x.pkl"
+  # WEIGHT: "/root/ebms_regression/detection/pretrained_models/dsm_model_0060000.pth"
+  WEIGHT: "/root/ebms_regression/detection/checkpoints/dsm/model_0060000.pth"
   TRAIN_BBREG_ON: False
   TRAIN_RPN: False
   TRAIN_BACKBONE: False
@@ -28,9 +29,10 @@ MODEL:
     FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
     PREDICTOR: "FPNPredictor"
   ROI_IOU_HEAD:
-    LOSS_TYPE: "ML"
-    STEP_LENGTH: (5e-5, 2e-4)
-    NUM_REFINE_ITER: 5
+    LOSS_TYPE: "DSM"
+    STEP_LENGTH: (2.5e-5, 1e-4)
+    STEP_LENGTH_DECAY: 0.5
+    NUM_REFINE_ITER: 10
     GT_SIGMA: (0.0, 0.0)
     PROPOSAL_SIGMA: ((0.05, 0.05), (0.1, 0.1), (0.2, 0.2))
     PERFORM_FILTERING: True
@@ -52,4 +54,4 @@ SOLVER:
   WEIGHT_DECAY: 0.0001
   STEPS: (40000, 50000)
   MAX_ITER: 60000
-OUTPUT_DIR: "/root/ebms_regression/detections/checkpoints/dctd"
+OUTPUT_DIR: "/root/ebms_regression/detection/checkpoints/dsm_eval_val"

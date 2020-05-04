@@ -872,6 +872,219 @@ class ROIIoUHead_nce(torch.nn.Module): #########################################
         else:
             return x, iou_score, {}
 
+class ROIIoUHead_dsm(torch.nn.Module): ############################################################################
+    """
+    """
+
+    def __init__(self, cfg, in_channels):
+        super(ROIIoUHead_dsm, self).__init__()
+        self.feature_extractor = make_roi_iou_feature_extractor(cfg, in_channels)
+        self.predictor = make_roi_iou_predictor(
+            cfg, self.feature_extractor.out_channels)
+        self.post_processor = make_roi_iou_post_processor(cfg)
+        self.loss_evaluator = make_roi_iou_loss_evaluator(cfg)
+
+        self.mode = cfg.MODEL.ROI_IOU_HEAD.LOSS_TYPE
+        self.cfg = cfg
+
+    def optimize_boxes(self, features, boxes):
+        # Optimize iounet boxes
+
+        step_length = self.cfg.MODEL.ROI_IOU_HEAD.STEP_LENGTH
+        if isinstance(step_length, (tuple, list)):
+            if len(step_length) == 1:
+                step_length = torch.Tensor([step_length[0], step_length[0], step_length[0], step_length[0]]).to(
+                    features[0].device).view(1, 4)
+            elif len(step_length) == 2:
+                step_length = torch.Tensor([step_length[0], step_length[0], step_length[1], step_length[1]]).to(
+                    features[0].device).view(1, 4)
+            else:
+                raise ValueError
+
+        if self.mode == "L2":
+            box_refinement_space = "default"
+        else:
+            box_refinement_space = 'relative'
+
+        box_refinement_iter = self.cfg.MODEL.ROI_IOU_HEAD.NUM_REFINE_ITER
+
+        boxes_per_image = [b.bbox.shape[0] for b in boxes]
+        step_length = [step_length.clone().expand(b.bbox.shape[0], -1).contiguous() for b in boxes]
+        labels_list = [b.get_field("box_labels") for b in boxes]
+        labels = torch.cat(labels_list)
+        scores = [b.get_field("scores") for b in boxes]
+
+        for f in features:
+            f.requires_grad = True
+
+        if box_refinement_space == 'default':
+            # raise NotImplementedError
+            # omega1 = 0.001
+            # omega2 = -0.01
+
+            for i_ in range(box_refinement_iter):
+                # forward pass
+                # Assume box format is xyxy
+                bb_init = [BoxList(b.bbox.clone().detach(), b.size, b.mode) for b in boxes]
+
+                for b in bb_init:
+                    b.bbox.requires_grad = True
+
+                x = self.feature_extractor(features, bb_init)
+
+                iou_score = self.predictor(x)
+                iou_score = iou_score[torch.arange(iou_score.shape[0]), labels]
+
+                iou_score.backward(gradient = torch.ones_like(iou_score))
+
+                # Update proposal
+                bb_refined = [BoxList((b.bbox + s * b.bbox.grad * (b.bbox[:, 2:] - b.bbox[:, :2]).repeat(1, 2)).detach(),
+                                 b.size, b.mode) for b, s in zip(bb_init, step_length)]
+
+                with torch.no_grad():
+                    x = self.feature_extractor(features, bb_refined)
+
+                    new_iou_score = self.predictor(x)
+                    new_iou_score = new_iou_score[torch.arange(new_iou_score.shape[0]), labels]
+
+                    refinement_failed = (new_iou_score < iou_score)
+                    refinement_failed = refinement_failed.view(-1, 1)
+                    refinement_failed = refinement_failed.split(boxes_per_image, dim=0)
+
+                    boxes = [BoxList(b_i.bbox * r_f.float() + b_r.bbox * (1 - r_f).float(), b_i.size, b_i.mode)
+                             for b_i, b_r, r_f in zip(bb_init, bb_refined, refinement_failed)]
+
+                    # decay step length for failures
+                    decay_factor = self.cfg.MODEL.ROI_IOU_HEAD.STEP_LENGTH_DECAY
+                    step_length = [s * (1 - r_f).float() + s * decay_factor * r_f.float()
+                                   for s, r_f in zip(step_length, refinement_failed)]
+
+        elif box_refinement_space == 'relative':
+            boxes = [b.convert("xywh") for b in boxes]
+            sz_norm = [b.bbox[:, 2:].clone() for b in boxes]
+
+            # TODO test this
+            boxes_rel = [BoxList(rect_to_rel(b.bbox, s), b.size, b.mode) for b, s in zip(boxes, sz_norm)]
+
+            for i_ in range(box_refinement_iter):
+                # forward pass
+                bb_init_rel = [BoxList(b.bbox.clone().detach(), b.size, b.mode) for b in boxes_rel]
+
+                for b in bb_init_rel:
+                    b.bbox.requires_grad = True
+
+                bb_init = [BoxList(rel_to_rect(b.bbox, s), b.size, b.mode) for b, s in zip(bb_init_rel, sz_norm)]
+
+                bb_init = [b.convert('xyxy') for b in bb_init]
+
+                x = self.feature_extractor(features, bb_init)
+
+                iou_score = self.predictor(x)
+                iou_score = iou_score[torch.arange(iou_score.shape[0]), labels]
+
+                iou_score.backward(gradient=torch.ones_like(iou_score))
+
+                # Update proposal
+                bb_refined_rel = [BoxList((b.bbox + s * b.bbox.grad).detach(), b.size, b.mode)
+                                  for b, s in zip(bb_init_rel, step_length)]
+
+                bb_refined = [BoxList(rel_to_rect(b.bbox, s), b.size, b.mode) for b, s in zip(bb_refined_rel, sz_norm)]
+                bb_refined = [b.convert('xyxy') for b in bb_refined]
+
+                with torch.no_grad():
+                    x = self.feature_extractor(features, bb_refined)
+
+                    new_iou_score = self.predictor(x)
+                    new_iou_score = new_iou_score[torch.arange(new_iou_score.shape[0]), labels]
+
+                    refinement_failed = (new_iou_score < iou_score)
+                    refinement_failed = refinement_failed.view(-1, 1)
+                    refinement_failed = refinement_failed.split(boxes_per_image, dim=0)
+
+                    boxes_rel = [BoxList(b_i.bbox * r_f.float() + b_r.bbox * (1 - r_f).float(), b_i.size, b_i.mode)
+                                 for b_i, b_r, r_f in zip(bb_init_rel, bb_refined_rel, refinement_failed)]
+
+                    # decay step length for failures
+                    decay_factor = self.cfg.MODEL.ROI_IOU_HEAD.STEP_LENGTH_DECAY
+                    step_length = [s*(1 - r_f).float() + s*decay_factor*r_f.float()
+                                   for s, r_f in zip(step_length, refinement_failed)]
+
+            boxes = [BoxList(rel_to_rect(b.bbox, s), b.size, b.mode) for b, s in zip(boxes_rel, sz_norm)]
+            boxes = [b.convert("xyxy") for b in boxes]
+
+        for b, s, l in zip(boxes, scores, labels_list):
+            b.add_field("scores", s)
+            b.add_field("labels", l)
+            b.add_field("box_labels", l)
+
+        return boxes
+
+    def forward(self, features, proposals=None, targets=None, iteration=None, original_image_ids=None): ###############################################################
+        """
+        Arguments:
+            features (list[Tensor]): feature-maps from possibly several levels
+            proposals (list[BoxList]): proposal boxes
+            targets (list[BoxList], optional): the ground-truth targets.
+
+        Returns:
+            x (Tensor): the result of the feature extractor
+            proposals (list[BoxList]): during training, the subsampled proposals
+                are returned. During testing, the predicted boxlists are returned
+            losses (dict[Tensor]): During training, returns the losses for the
+                head. During testing, returns an empty dict.
+        """
+
+        # during TRAINING:
+        # (features is a list of 5 elements)
+        # (features[0] has shape: (16, 256, h/4, w/4)) (not always exactly h/4, w/4)
+        # (features[1] has shape: (16, 256, h/8, w/8))
+        # (features[2] has shape: (16, 256, h/16, w/16))
+        # (features[3] has shape: (16, 256, h/32, w/32))
+        # (features[4] has shape: (16, 256, h/64, w/64))
+        #
+        # (targets is a list of 16 elements, each element is a BoxList (e.g. [BoxList(num_boxes=3, image_width=800, image_height=1066, mode=xyxy), BoxList(num_boxes=19, image_width=800, image_height=1201, mode=xyxy),...]))
+
+        if self.training:
+            with torch.no_grad():
+                proposals = self.loss_evaluator.sample_jittered_boxes(targets) #######################################################
+                # (proposals is a list of 16 elements, each element is a BoxList, num_boxes in each BoxList is M*{num_boxes for the corresponding BoxList in targets})
+
+            for proposal in proposals:
+                proposal.bbox.requires_grad = True
+
+        x = self.feature_extractor(features, proposals)
+        iou_score = self.predictor(x)
+        # (shape: (num_gt_bboxes_in_batch*M, 81)) (81 is the number of classes)
+
+        if not self.training:
+            if self.cfg.MODEL.ROI_IOU_HEAD.PERFORM_FILTERING and self.cfg.MODEL.ROI_IOU_HEAD.NMS_BEFORE:
+                result = self.post_processor(proposals, iou_score)
+            else:
+                result = proposals
+            with torch.enable_grad():
+                result = self.optimize_boxes(features, result)
+
+            if self.cfg.MODEL.ROI_IOU_HEAD.PERFORM_FILTERING and not self.cfg.MODEL.ROI_IOU_HEAD.NMS_BEFORE:
+                x = self.feature_extractor(features, result)
+
+                # final classifier that converts the features into predictions
+                iou_score = self.predictor(x)
+
+                result = self.post_processor(result, iou_score)
+
+            return x, result, {}
+
+        if self.training:
+            loss_iou = self.loss_evaluator(iou_score, targets, proposals)
+            # (loss_iou is just a tensor of a single value)
+            return (
+                x,
+                proposals,
+                dict(loss_iou=loss_iou),
+            )
+        else:
+            return x, iou_score, {}
+
 
 def build_roi_iou_head(cfg, in_channels):
     """
@@ -890,6 +1103,9 @@ def build_roi_iou_head(cfg, in_channels):
 
     elif loss_type == "NCE":
         return ROIIoUHead_nce(cfg, in_channels)
+
+    elif loss_type == "DSM":
+        return ROIIoUHead_dsm(cfg, in_channels)
 
     else:
         raise ValueError
