@@ -228,8 +228,12 @@ TODO!
 
 - Example usage:
 ```
-TODO!
+$ sh start_docker_image_ebms_regression.sh
+$ cd --
+$ python ebms_regression/1dregression/1/nce+_train.py 
 ```
+
+- 1dregression/1 contains all code for the first dataset, 1dregression/2 for the second dataset.
 
 - TODO!
 ***
