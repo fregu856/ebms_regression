@@ -1,0 +1,57 @@
+#!/bin/bash
+
+POSITIONAL=()
+
+QUEUE="gpu.24h.q@*"
+
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        -q|--queue)
+        case $2 in
+            2h)
+            QUEUE="gpu.2h.q@*"
+            ;;
+            24h)
+            QUEUE="gpu.24h.q@*"
+            ;;
+	    48h)
+            QUEUE="gpu.48h.q@*"
+            ;;
+            5d)
+            QUEUE="gpu.5d.q@*"
+            ;;
+            *)    # unknown option
+            echo "Unknown queue option. Must be 2h,24h,48h or 5d."
+            ;;
+        esac
+        shift # past argument
+        shift # past value
+        ;;
+        *)    # unknown option
+        POSITIONAL+=("$1") # save it in an array for later
+        shift # past argument
+        ;;
+    esac
+done
+
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+# echo "qsub -o qsub_logs -q "${QUEUE}" -l gpu=1 -l h_vmem=50G -j y -cwd  job.sh $1"
+
+out="$(qsub -o qsub_logs -q "${QUEUE}" -l gpu=1 -l h_vmem=50G -j y -cwd  job.sh $1)"
+
+echo $out
+id=${out:9:7}
+file="qsub_logs/job.sh.o${id}"
+
+echo "Waiting for job to start ..."
+
+while [ ! -f $file ]
+do
+  sleep 2
+done
+
+echo "Job started! Reading output file ${file} :"
+tail -f $file
