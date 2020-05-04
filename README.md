@@ -312,7 +312,7 @@ AP, AP50, AP75, APs, APm, APl
 - - $ cd --
 - - $ cd ebms_regression/detection
 - - $ python tools/test_net.py --config-file "configs/nce+_eval_pretrained_test-dev.yaml"
-- - Download the file detection/checkpoints/nce+_eval_pretrained_test-dev/inference/codo_2017_test-dev/bbox.json (105.2 MB).
+- - Download the file detection/checkpoints/nce+_eval_pretrained_test-dev/inference/coco_2017_test-dev/bbox.json (105.2 MB).
 - - Rename this file to detections_test-dev2017_nce+_pretrained_results.json.
 - - Compress this file to create detections_test-dev2017_nce+_pretrained_results.zip.
 - - Go to https://competitions.codalab.org/competitions/20794. Click "Participate". Mark "test-dev2019 (bbox)". Choose a team name. Method name: nce+_pretrained. Upload the zip file (nothing happens for 1-2 mins after you upload the zip file, but then it appears in the table).
