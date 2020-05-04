@@ -59,6 +59,7 @@ TODO!
 ## Acknowledgements
 
 - The object detection code is based on [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark) by [@facebookresearch](https://github.com/facebookresearch).
+- The object detection code utilizes [PreciseRoIPooling](https://github.com/vacancy/PreciseRoIPooling) by [@vacancy](https://github.com/vacancy).
 
 
 
@@ -69,6 +70,7 @@ TODO!
 
 
 ## Index
+
 - [Usage](#usage)
 - - [1D Regression](#1dregression)
 - - [Object Detection](#detection)
@@ -198,6 +200,8 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - $ python setup.py install --cuda_ext --cpp_ext
 - $ cd ebms_regression/detection
 - $ python setup.py build develop
+- Ctrl + P + Q
+- $ docker commit ebms_regression_GPU0 fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
 *
 *
 - Download the code from https://github.com/vacancy/PreciseRoIPooling and place in ebms_regression/detection/external/PreciseROIPooling.
