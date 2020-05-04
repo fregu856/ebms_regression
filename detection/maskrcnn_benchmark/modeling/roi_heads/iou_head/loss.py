@@ -251,6 +251,65 @@ def nce_sample_box_gmm(mean_box, proposal_sigma, gt_sigma=None, num_samples=1, a
 
     return proposals, proposal_density, gt_density, proposal_density_zero
 
+def nce_sample_gmm_centered2(std, std2, num_samples=1): ########################################################
+    num_components = std.shape[-1]
+    num_dims = std.numel() // num_components
+
+    std = std.view(1, num_dims, num_components)
+    std2 = std2.view(1, num_dims, num_components)
+
+    # Sample component ids
+    k = torch.randint(num_components, (num_samples,), dtype=torch.int64)
+    std_samp2 = std2[0,:,k].t()
+
+    # Sample
+    x_centered2 = std_samp2 * torch.randn(num_samples, num_dims)
+    prob_dens2 = gmm_density_centered(x_centered2, std) # (note that it actually should be std here!)
+
+    return x_centered2, prob_dens2
+
+
+def nce_sample_box_gmm2(mean_box, proposal_sigma, beta, gt_sigma=None, num_samples=1, add_mean_box=False): #########################################################################
+    center_std = torch.Tensor([s[0] for s in proposal_sigma])
+    sz_std = torch.Tensor([s[1] for s in proposal_sigma])
+    std = torch.stack([center_std, center_std, sz_std, sz_std])
+
+    center_std2 = torch.Tensor([s[0] for s in proposal_sigma])
+    sz_std2 = torch.Tensor([s[1] for s in proposal_sigma])
+    std2 = beta*torch.stack([center_std2, center_std2, sz_std2, sz_std2])
+
+    # print (std)
+    # print (std2)
+    # print ("{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}")
+
+    mean_box = mean_box.view(1,4)
+    sz_norm = mean_box[:,2:].clone()
+
+    # Sample boxes
+    proposals_rel_centered2, proposal_density2 = nce_sample_gmm_centered2(std, std2, num_samples)
+    # (proposals_rel_centered has shape: (num_samples, 4))
+    # (proposal_density has shape: (num_samples))
+    # (proposal_density_zero has shape: (num_samples)) (all values are identical and constant) (this constant value only depends on std)
+
+    # Add mean and map back
+    mean_box_rel = rect_to_rel(mean_box, sz_norm)
+    proposals_rel = proposals_rel_centered2 + mean_box_rel
+    proposals = rel_to_rect(proposals_rel, sz_norm)
+
+    if gt_sigma is None or gt_sigma[0] == 0 and gt_sigma[1] == 0:
+        gt_density = torch.zeros_like(proposal_density2)
+    else:
+        std_gt = torch.Tensor([gt_sigma[0], gt_sigma[0], gt_sigma[1], gt_sigma[1]]).view(1,4)
+        gt_density = gauss_density_centered(proposals_rel_centered, std_gt).prod(-1)
+
+    if add_mean_box:
+        proposals = torch.cat((mean_box, proposals))
+        proposal_density = torch.cat((torch.Tensor([-1]), proposal_density2))
+        gt_density = torch.cat((torch.Tensor([1]), gt_density))
+
+    return proposals, proposal_density2, gt_density
+
+
 
 def kl_regression_loss(scores, sample_density, gt_density, mc_dim=0, eps=0.0, size_average=True):
     """mc_dim is dimension of MC samples."""
@@ -1362,6 +1421,162 @@ class LossComputation_mlmcmc(object): ##########################################
 
         return loss
 
+class LossComputation_nceplus(object): #########################################################################
+    """
+    """
+
+    def __init__(
+        self,
+        num_proposal=128,
+        gt_sigma=(0.125, 0.125),
+        proposal_sigma=((0.125, 0.125), (0.25, 0.25), (0.5, 0.5), (1.0, 1.0)),
+        cls_agnostic_iou_pred=False,
+        exp_clamp=None
+    ):
+        self.num_proposal = num_proposal
+        self.gt_sigma = gt_sigma
+        self.proposal_sigma = proposal_sigma
+        self.cls_agnostic_iou_pred = cls_agnostic_iou_pred
+        self.exp_clamp = exp_clamp
+
+    def sample_jittered_boxes(self, gt_boxes, beta): ######################################################
+        """
+        :param gt_boxes: BoxList containining the gt boxes for each image
+        :return:
+        """
+
+        # print (self.proposal_sigma)
+        # print (beta)
+
+        orig_mode_list = [b.mode for b in gt_boxes]
+        gt_boxes = [b.convert('xywh') for b in gt_boxes]
+
+        proposal_density_list = []
+        gt_density_list = []
+
+        jittered_boxes = []
+        for gt_b in gt_boxes:
+            device = gt_b.bbox.device
+            b = gt_b.bbox.view(-1, 4).cpu()
+            labels = gt_b.get_field("labels")
+
+            out_boxes_list = []
+
+            for i in range(b.shape[0]):
+                proposals, proposal_density, gt_density, proposal_density_zero = nce_sample_box_gmm(b[i, :], self.proposal_sigma, self.gt_sigma,
+                                                                                                    self.num_proposal-1, True)
+
+                proposals2, proposal_density2, _ = nce_sample_box_gmm2(b[i, :], self.proposal_sigma, beta, self.gt_sigma, 1, False)
+
+                # (proposals has shape: (M, 4))
+                # (proposal_density has shape: (M))
+                # (proposals2 has shape: (1, 4))
+                # (proposal_density2 has shape: (1))
+
+                # print (b[i, :])
+                # print ("{{{}}}")
+                #
+                # print (proposals[0:17])
+                # print ("{{{}}}")
+                #
+                # print (proposals2)
+                # print ("{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}")
+
+
+                proposals = torch.cat([proposals, proposals2]) # (shape: (M+1, 4))
+                proposal_density = torch.cat([proposal_density, proposal_density2]) # (shape: (M+1))
+
+                # if i == 0:
+                #     print (proposals[0:5])
+                #     print ("@@@@@@@@@@")
+
+                proposals = proposals.to(device)
+                proposal_density = proposal_density.to(device)
+                gt_density = gt_density.to(device)
+
+                out_boxes_list.append(proposals)
+                proposal_density_list.append(proposal_density)
+                gt_density_list.append(gt_density)
+
+            # print ("{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}")
+
+            out_boxes_t = torch.cat(out_boxes_list, dim=0)
+
+            new_box = BoxList(out_boxes_t, image_size=gt_b.size, mode='xywh')
+            labels = labels.view(-1, 1).repeat(1, self.num_proposal+1)
+            new_box.add_field("labels", labels.view(-1))
+
+            jittered_boxes.append(new_box)
+
+        jittered_boxes = [b.convert(m) for b, m in zip(jittered_boxes, orig_mode_list)]
+
+        # TODO is this safe?
+        self._proposal_density = torch.cat(proposal_density_list, dim=0)
+        self._gt_density = torch.cat(gt_density_list, dim=0)
+        self._proposals = jittered_boxes
+
+        proposal_density_zero = proposal_density_zero.to(device) # (proposal_density_zero has shape: (num_proposl-1)) (all values are identical and constant) (this constant value only depends on std)
+        self._proposal_density_zero = proposal_density_zero
+
+        # TODO check output distribution
+        return jittered_boxes
+
+    def __call__(self, score): ##############################################################
+        """
+        Computes the loss for Faster R-CNN.
+        This requires that the subsample method has been called beforehand.
+
+        Arguments:
+            class_logits (list[Tensor])
+            box_regression (list[Tensor])
+
+        Returns:
+            classification_loss (Tensor)
+            box_loss (Tensor)
+        """
+
+        # (score has shape: (num_bboxes, 81)) (num_bboxes can be different for every batch, e.g. 13952, 20608, ...)
+
+        device = score.device
+
+        # TODO handle multi-class stuff
+        gt_density = self._gt_density # (shape: (num_bboxes))
+        proposal_density = self._proposal_density # (shape: (num_bboxes))
+        proposal_density_zero = self._proposal_density_zero # (shape: (num_proposl-1))
+
+        labels = cat([proposal.get_field("labels") for proposal in self._proposals], dim=0).long()
+
+        sampled_pos_inds_subset = torch.nonzero(labels > 0).squeeze(1)
+        labels_pos = labels[sampled_pos_inds_subset]
+
+        if self.cls_agnostic_iou_pred:
+            map_inds = torch.tensor([0], device=device)
+        else:
+            map_inds = labels_pos[:, None]
+
+        score = score[sampled_pos_inds_subset[:, None], map_inds].view(-1, self.num_proposal+1)
+        # (shape: (num_gt_bboxes_in_batch, M+1))
+
+        proposal_density = proposal_density[sampled_pos_inds_subset].view(-1, self.num_proposal+1)
+        # (shape: (num_gt_bboxes_in_batch, M+1))
+
+        q_y_samples = proposal_density[:, 1:self.num_proposal] # (shape: (num_gt_bboxes_in_batch, M-1))
+
+        # q_ys = proposal_density_zero[0]*torch.ones(q_y_samples.size(0)) # (shape: (num_gt_bboxes_in_batch))
+        # q_ys = q_ys.to(device)
+
+        q_ys2 = proposal_density[:, self.num_proposal] # (shape: (num_gt_bboxes_in_batch))
+
+        # scores_gt = score[:, 0] # (shape: (num_gt_bboxes_in_batch))
+
+        scores_gt2 = score[:, self.num_proposal] # (shape: (num_gt_bboxes_in_batch))
+
+        scores_samples = score[:, 1:self.num_proposal] # (shape: (num_gt_bboxes_in_batch, M-1))
+
+        loss = -torch.mean(scores_gt2-torch.log(q_ys2) - torch.log(torch.exp(scores_gt2-torch.log(q_ys2)) + torch.sum(torch.exp(scores_samples-torch.log(q_y_samples)), dim=1)))
+
+        return loss
+
 
 def make_roi_iou_loss_evaluator(cfg):
     num_proposal = cfg.MODEL.ROI_IOU_HEAD.NUM_TRAIN_PROPOSALS
@@ -1403,6 +1618,13 @@ def make_roi_iou_loss_evaluator(cfg):
                                               )
     elif loss_type == "ML-MCMC":
         loss_evaluator = LossComputation_mlmcmc(num_proposal=num_proposal,
+                                              gt_sigma=gt_sigma,
+                                              proposal_sigma=proposal_sigma,
+                                              cls_agnostic_iou_pred=cls_agnostic_iou_pred,
+                                              exp_clamp=None
+                                              )
+    elif loss_type == "NCE+":
+        loss_evaluator = LossComputation_nceplus(num_proposal=num_proposal,
                                               gt_sigma=gt_sigma,
                                               proposal_sigma=proposal_sigma,
                                               cls_agnostic_iou_pred=cls_agnostic_iou_pred,
