@@ -133,6 +133,8 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - - Ctrl + P + Q
 - - To get back into a running image:
 - - - $ docker attach ebms_regression_GPU0
+*
+*
 
 - Example usage:
 ```
@@ -217,7 +219,10 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 
 - Example usage:
 ```
-TODO! (train NCE+)
+$ sh start_docker_image_ebms_regression.sh
+$ cd --
+$ cd ebms_regression/detection
+$ python tools/train_net.py --config-file "configs/nce+_train.yaml"
 ```
 ***
 ***
