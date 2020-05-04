@@ -192,6 +192,19 @@ TODO! TODO!
 
 
 
+$ cd project3
+$ git clone https://github.com/cocodataset/cocoapi.git
+$ cd cocoapi/PythonAPI
+$ python setup.py build_ext install
+$ cd project3
+$ git clone https://github.com/NVIDIA/apex.git
+$ cd apex
+$ python setup.py install --cuda_ext --cpp_ext
+$ cd project3/2dod
+$ python setup.py build develop
+
+
+
 *
 *
 - Download the COCO dataset:
