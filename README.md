@@ -58,7 +58,8 @@ TODO!
 
 ## Acknowledgements
 
-- TODO!
+- The object detection code is based on [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark) by [@facebookresearch](https://github.com/facebookresearch).
+- The object detection code utilizes [PreciseRoIPooling](https://github.com/vacancy/PreciseRoIPooling) by [@vacancy](https://github.com/vacancy).
 
 
 
@@ -69,6 +70,7 @@ TODO!
 
 
 ## Index
+
 - [Usage](#usage)
 - - [1D Regression](#1dregression)
 - - [Object Detection](#detection)
@@ -133,6 +135,8 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - - Ctrl + P + Q
 - - To get back into a running image:
 - - - $ docker attach ebms_regression_GPU0
+*
+*
 
 - Example usage:
 ```
@@ -185,13 +189,22 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - - $ docker attach ebms_regression_GPU0
 *
 *
-
-
-
-TODO! TODO!
-
-
-
+- $ docker attach ebms_regression_GPU0
+- $ cd ebms_regression
+- $ git clone https://github.com/cocodataset/cocoapi.git
+- $ cd cocoapi/PythonAPI
+- $ python setup.py build_ext install
+- $ cd ebms_regression
+- $ git clone https://github.com/NVIDIA/apex.git
+- $ cd apex
+- $ python setup.py install --cuda_ext --cpp_ext
+- $ cd ebms_regression/detection
+- $ python setup.py build develop
+- Ctrl + P + Q
+- $ docker commit ebms_regression_GPU0 fregu856/ebms_regression:ufoym_deepo_pytorch-py36-cu90_ebms_regression
+*
+*
+- Download the code from https://github.com/vacancy/PreciseRoIPooling and place in ebms_regression/detection/external/PreciseROIPooling.
 *
 *
 - Download the COCO dataset:
@@ -204,13 +217,16 @@ TODO! TODO!
 - - (detection/datasets/coco should now contain the folders annotations, train2017, val2017 and test2017)
 *
 *
-- Download pretrained Faster-RCNN detector (e2e_faster_R-50-FPN_1x.pkl) from https://drive.google.com/open?id=1Ows6VAPH5i5Y-gL9uHDa1SASZ0WQmxOj and place in detection/pretrained_models.
+- Download a pretrained Faster-RCNN detector (e2e_faster_R-50-FPN_1x.pkl) from https://drive.google.com/open?id=1Ows6VAPH5i5Y-gL9uHDa1SASZ0WQmxOj and place in detection/pretrained_models.
 *
 *
 
 - Example usage:
 ```
-TODO! (train NCE+)
+$ sh start_docker_image_ebms_regression.sh
+$ cd --
+$ cd ebms_regression/detection
+$ python tools/train_net.py --config-file "configs/nce+_train.yaml"
 ```
 ***
 ***
