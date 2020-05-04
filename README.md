@@ -185,6 +185,15 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - - $ docker attach ebms_regression_GPU0
 *
 *
+
+
+
+TODO! TODO!
+
+
+
+*
+*
 - Download the COCO dataset:
 - - $ docker attach ebms_regression_GPU0
 - - $ cd ebms_regression/detection/datasets/coco
@@ -193,16 +202,6 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - Download val2017.zip ($ wget http://images.cocodataset.org/zips/val2017.zip) and unzip ($ unzip val2017.zip).
 - - Download test2017.zip ($ wget http://images.cocodataset.org/zips/test2017.zip) and unzip ($ unzip test2017.zip).
 - - (detection/datasets/coco should now contain the folders annotations, train2017, val2017 and test2017)
-
-
-- - TODO! (download datasets and pretrained detector)
-
-
-
-
-
-
-
 *
 *
 - Download pretrained Faster-RCNN detector (e2e_faster_R-50-FPN_1x.pkl) from https://drive.google.com/open?id=1Ows6VAPH5i5Y-gL9uHDa1SASZ0WQmxOj and place in detection/pretrained_models.
@@ -211,7 +210,7 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 
 - Example usage:
 ```
-TODO!
+TODO! (train NCE+)
 ```
 ***
 ***
@@ -310,4 +309,4 @@ TODO!
 ***
 ## Pretrained model
 
-- TODO!
+- TODO! (also write here how to run the code to eval on val, write what metrics one should expect)
