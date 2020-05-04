@@ -58,7 +58,7 @@ TODO!
 
 ## Acknowledgements
 
-- TODO!
+- The object detection code is based on [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark) by [@facebookresearch](https://github.com/facebookresearch).
 
 
 
@@ -185,24 +185,23 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - - $ docker attach ebms_regression_GPU0
 *
 *
-
-
+- $ docker attach ebms_regression_GPU0
+- $ cd ebms_regression
+- $ git clone https://github.com/cocodataset/cocoapi.git
+- $ cd cocoapi/PythonAPI
+- $ python setup.py build_ext install
+- $ cd ebms_regression
+- $ git clone https://github.com/NVIDIA/apex.git
+- $ cd apex
+- $ python setup.py install --cuda_ext --cpp_ext
+- $ cd ebms_regression/detection
+- $ python setup.py build develop
+*
+*
+Download the code from https://github.com/vacancy/PreciseRoIPooling, unzip, take all the files INSIDE the folder and place in project3/2dod/external/PreciseROIPooling.
+Make sure prroi_pooling_gpu_impl.cu and prroi_pooling_gpu_impl.cuh actually got uploaded to the server, that they can be found in 2dod/extenal/PreciseROIPooling/pytorch/prroi_pool/src on the server (I had to do this).
 
 TODO! TODO!
-
-
-
-$ cd project3
-$ git clone https://github.com/cocodataset/cocoapi.git
-$ cd cocoapi/PythonAPI
-$ python setup.py build_ext install
-$ cd project3
-$ git clone https://github.com/NVIDIA/apex.git
-$ cd apex
-$ python setup.py install --cuda_ext --cpp_ext
-$ cd project3/2dod
-$ python setup.py build develop
-
 
 
 *
