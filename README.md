@@ -180,6 +180,7 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - Download train2017.zip ($ wget http://images.cocodataset.org/zips/train2017.zip) and unzip ($ unzip train2017.zip).
 - - Download val2017.zip ($ wget http://images.cocodataset.org/zips/val2017.zip) and unzip ($ unzip val2017.zip).
 - - Download test2017.zip ($ wget http://images.cocodataset.org/zips/test2017.zip) and unzip ($ unzip test2017.zip).
+- - Download image_info_test2017.zip ($ wget http://images.cocodataset.org/annotations/image_info_test2017.zip) and unzip ($ unzip image_info_test2017.zip).
 - - (detection/datasets/coco should now contain the folders annotations, train2017, val2017 and test2017)
 *
 *
@@ -311,9 +312,14 @@ AP, AP50, AP75, APs, APm, APl
 - - $ cd --
 - - $ cd ebms_regression/detection
 - - $ python tools/test_net.py --config-file "configs/nce+_eval_pretrained_test-dev.yaml"
-- - TODO!
+- - Download the file detection/checkpoints/nce+_eval_pretrained_test-dev/inference/codo_2017_test-dev/bbox.json (105.2 MB).
+- - Rename this file to detections_test-dev2017_nce+_pretrained_results.json.
+- - Compress this file to create detections_test-dev2017_nce+_pretrained_results.zip.
+- - Go to https://competitions.codalab.org/competitions/20794. Click "Participate". Mark "test-dev2019 (bbox)". Choose a team name. Method name: nce+_pretrained. Upload the zip file (nothing happens for 1-2 mins after you upload the zip file, but then it appears in the table).
+- - Wait for the evaluation to complete on the server (click on "Refresh status" until the status is "Finished").
+- - Click on "Download output from scoring step".
+- - scores.txt in the downloaded output_file.zip contains the results.
 - - Expected output:
 ```
 TODO! TODO!
 ```
-
