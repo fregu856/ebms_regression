@@ -238,7 +238,7 @@ $ python ebms_regression/1dregression/1/nce+_train.py
 - _1dregression/1/model.py_: Definition of the feed-forward DNN f_\theta(x, y). Identical to _1dregression/2/model.py_.
 - _1dregression/{1, 2}/datasets.py_: Definition of the {first, second} dataset.
 - _1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce+}}_train.py_: Train 20 models on the {first, second} dataset using {{ML-IS, ML-MCMC-16, KLD-IS, NCE, SM, DSM, NCE+}}.
-- _1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce}}eval.py_: Evaluate the KL divergence to the true p(y | x) for all 20 trained models, compute the mean for the 5 best models. 
+- _1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce}}_eval.py_: Evaluate the KL divergence to the true p(y | x) for all 20 trained models, compute the mean for the 5 best models. 
 
 - TODO!
 ***
