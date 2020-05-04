@@ -183,14 +183,34 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - - - Ctrl + P + Q
 - - To get back into a running image:
 - - - $ docker attach ebms_regression_GPU0
+*
+*
 
 
-- TODO! (download datasets and pretrained detector)
 
+TODO! TODO!
+
+
+
+*
+*
+- Download the COCO dataset:
+- - $ docker attach ebms_regression_GPU0
+- - $ cd ebms_regression/detection/datasets/coco
+- - Download annotations_trainval2017.zip ($ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip) and unzip ($ unzip annotations_trainval2017.zip).
+- - Download train2017.zip ($ wget http://images.cocodataset.org/zips/train2017.zip) and unzip ($ unzip train2017.zip).
+- - Download val2017.zip ($ wget http://images.cocodataset.org/zips/val2017.zip) and unzip ($ unzip val2017.zip).
+- - Download test2017.zip ($ wget http://images.cocodataset.org/zips/test2017.zip) and unzip ($ unzip test2017.zip).
+- - (detection/datasets/coco should now contain the folders annotations, train2017, val2017 and test2017)
+*
+*
+- Download pretrained Faster-RCNN detector (e2e_faster_R-50-FPN_1x.pkl) from https://drive.google.com/open?id=1Ows6VAPH5i5Y-gL9uHDa1SASZ0WQmxOj and place in detection/pretrained_models.
+*
+*
 
 - Example usage:
 ```
-TODO!
+TODO! (train NCE+)
 ```
 ***
 ***
@@ -228,10 +248,18 @@ TODO!
 
 - Example usage:
 ```
-TODO!
+$ sh start_docker_image_ebms_regression.sh
+$ cd --
+$ python ebms_regression/1dregression/1/nce+_train.py 
 ```
 
-- TODO!
+1dregression/1 contains all code for the first dataset, 1dregression/2 all code for the second dataset.
+
+- **1dregression/1/model.py**: Definition of the feed-forward DNN f_\theta(x, y). Identical to **1dregression/2/model.py**.
+- **1dregression/{1, 2}/datasets.py**: Definition of the {first, second} dataset.
+- **1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce+}}_train.py**: Train 20 models on the {first, second} dataset using {{ML-IS, ML-MCMC-16, KLD-IS, NCE, SM, DSM, NCE+}}.
+- **1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce}}_eval.py**: Evaluate the KL divergence to the true p(y | x) for all 20 trained models, compute the mean for the 5 best models. 
+- **1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce}}_viz.py**: Visualize (p(y | x; \theta)) for one of the 20 trained models ([example plot for NCE+](https://github.com/fregu856/ebms_regression/blob/master/1dregression/training_logs/model_1-nce%2B/pred_dens_epoch_76.png)). 
 ***
 ***
 ***
@@ -281,4 +309,4 @@ TODO!
 ***
 ## Pretrained model
 
-- TODO!
+- TODO! (also write here how to run the code to eval on val, write what metrics one should expect)
