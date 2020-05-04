@@ -198,12 +198,7 @@ NV_GPU="$GPUIDS" nvidia-docker run -it --rm --shm-size 12G \
 - $ python setup.py build develop
 *
 *
-Download the code from https://github.com/vacancy/PreciseRoIPooling, unzip, take all the files INSIDE the folder and place in project3/2dod/external/PreciseROIPooling.
-Make sure prroi_pooling_gpu_impl.cu and prroi_pooling_gpu_impl.cuh actually got uploaded to the server, that they can be found in 2dod/extenal/PreciseROIPooling/pytorch/prroi_pool/src on the server (I had to do this).
-
-TODO! TODO!
-
-
+- Download the code from https://github.com/vacancy/PreciseRoIPooling and place in ebms_regression/detection/external/PreciseROIPooling.
 *
 *
 - Download the COCO dataset:
