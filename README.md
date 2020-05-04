@@ -239,8 +239,7 @@ $ python ebms_regression/1dregression/1/nce+_train.py
 - **1dregression/{1, 2}/datasets.py**: Definition of the {first, second} dataset.
 - **1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce+}}_train.py**: Train 20 models on the {first, second} dataset using {{ML-IS, ML-MCMC-16, KLD-IS, NCE, SM, DSM, NCE+}}.
 - **1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce}}_eval.py**: Evaluate the KL divergence to the true p(y | x) for all 20 trained models, compute the mean for the 5 best models. 
-
-- TODO!
+- **1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce}}_viz.py**: Visualize (p(y | x; \theta)) for one of the 20 trained models ([example plot for NCE+](https://github.com/fregu856/ebms_regression/blob/master/1dregression/training_logs/model_1-nce%2B/pred_dens_epoch_76.png)). 
 ***
 ***
 ***
