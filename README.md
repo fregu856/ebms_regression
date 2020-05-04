@@ -3,7 +3,7 @@
 ![overview image](ebms_regression.jpg)
 
 Official implementation (PyTorch) of the paper: \
-**How to Train Your Energy-Based Model for Regression**, 2020 [[arXiv (TODO!)]]() [[project (TODO!)]](). \
+**How to Train Your Energy-Based Model for Regression**, 2020 [[arXiv (TODO!)]]() [[project]](http://www.fregu856.com/publication/ebms_regression/). \
 _[Fredrik K. Gustafsson](http://www.fregu856.com/), [Martin Danelljan](https://martin-danelljan.github.io/), [Radu Timofte](http://people.ee.ethz.ch/~timofter/), [Thomas B. Schön](http://user.it.uu.se/~thosc112/)._ 
 
 We propose a simple yet highly effective extension of noise contrastive estimation (NCE) to train energy-based models p(y|x; theta) for regression tasks. Our proposed method NCE+ can be understood as a direct generalization of NCE, accounting for noise in the annotation process of real-world datasets. We provide a detailed comparison of NCE+ and six popular methods from literature, the results of which suggest that NCE+ should be considered the go-to training method. We also apply NCE+ to the task of visual tracking, setting a new state-of-the-art on five commonly used datasets. Notably, our tracker achieves 63.7% AUC on LaSOT and 78.7% Success on TrackingNet.
