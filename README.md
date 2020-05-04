@@ -301,7 +301,7 @@ $ python tools/test_net.py --config-file "configs/nce+_eval_test-dev.yaml"
 ***
 ## Pretrained model
 
-- Object detection model trained with NCE+: https://drive.google.com/open?id=1F7QoRJpbWQOWprD1Zefp050Ua8MYVFLW.
+- Object detection model trained with NCE+ on 2017 train: https://drive.google.com/open?id=1F7QoRJpbWQOWprD1Zefp050Ua8MYVFLW.
 *
 - Evaluate pretrained model on 2017 val:
 - - Download the file nce+_model_0060000.pth from above and place in detection/pretrained_models.
