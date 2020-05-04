@@ -233,7 +233,7 @@ $ cd --
 $ python ebms_regression/1dregression/1/nce+_train.py 
 ```
 
-- 1dregression/1 contains all code for the first dataset, 1dregression/2 all code for the second dataset.
+1dregression/1 contains all code for the first dataset, 1dregression/2 all code for the second dataset.
 
 - _1dregression/1/model.py_: Definition of the feed-forward DNN f_{\theta}(x, y). Identical to _1dregression/2/model.py_.
 - TODO!
