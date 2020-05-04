@@ -237,6 +237,54 @@ def ml_regression_loss(scores, sample_density, gt_density, mc_dim=0, eps=0.0, ex
         loss = L
     return loss
 
+def ml_regression_loss_logsumexp(scores, sample_density, gt_density, mc_dim=0, eps=0.0, exp_max=None, size_average=True): ##############################################
+    """mc_dim is dimension of MC samples."""
+    # (scores has shape: (num_bboxes_in_batch, M)) (M == 128) (num_bboxes_in_batch can be different for each batch)
+    # (sample_density has shape: (num_bboxes_in_batch, M))
+    # (gt_density has shape: (num_bboxes_in_batch, M))
+
+    assert mc_dim == 1
+    assert (sample_density[:,0,...] == -1).all()
+    assert (gt_density[:,0,...] == 1).all()
+
+    scores_samples = scores[:, 1:] # (shape: (num_bboxes_in_batch, M-1))
+    q_y_samples = sample_density[:, 1:] # (shape: (num_bboxes_in_batch, M-1))
+    scores_gt = scores[:, 0] # (shape: (num_bboxes_in_batch))
+    num_samples = scores_samples.size(1) # (M-1)
+
+    log_Z = torch.logsumexp(scores_samples - torch.log(q_y_samples), dim=1) - math.log(num_samples) # (shape: (num_bboxes_in_batch))
+
+    L = log_Z - scores_gt # (shape: (num_bboxes_in_batch))
+
+    # print (scores_samples.size())
+    # print (q_y_samples.size())
+    # print (scores_gt.size())
+    # print (num_samples)
+    # print (math.log(num_samples))
+    # print ("{{{{{{{{{{{{{{{{{}}}}}}}}}}}}}}}}}")
+
+    if size_average:
+        loss = L.mean()
+    else:
+        loss = L
+    return loss
+
+# def kl_regression_loss_logsumexp(scores, sample_density, gt_density, mc_dim=0, eps=0.0, exp_max=None, size_average=True): ##############################################
+#     """mc_dim is dimension of MC samples."""
+#     # (scores has shape: (num_bboxes_in_batch, M)) (M == 128) (num_bboxes_in_batch can be different for each batch)
+#     # (sample_density has shape: (num_bboxes_in_batch, M))
+#     # (gt_density has shape: (num_bboxes_in_batch, M))
+#
+#     exp_val = scores - torch.log(sample_density + eps)
+#
+#     L = torch.logsumexp(exp_val, dim=1) - math.log(scores.shape[1]) - torch.mean(scores * (gt_density / (sample_density + eps)), dim=1)
+#
+#     if size_average:
+#         loss = L.mean()
+#     else:
+#         loss = L
+#     return loss
+
 
 class IoUNetLossComputation(object):
     """
@@ -621,6 +669,246 @@ class MLIoUNetLossComputation(object):
         iou_loss = iou_loss.sum() / (labels.numel() / self.num_proposal)
         return iou_loss
 
+class LossComputation_mlis(object): #########################################################################
+    """
+    """
+
+    def __init__(
+        self,
+        num_proposal=128,
+        gt_sigma=(0.125, 0.125),
+        proposal_sigma=((0.125, 0.125), (0.25, 0.25), (0.5, 0.5), (1.0, 1.0)),
+        cls_agnostic_iou_pred=False,
+        exp_clamp=None
+    ):
+        self.num_proposal = num_proposal
+        self.gt_sigma = gt_sigma
+        self.proposal_sigma = proposal_sigma
+        self.cls_agnostic_iou_pred = cls_agnostic_iou_pred
+        self.exp_clamp = exp_clamp
+
+    def sample_jittered_boxes(self, gt_boxes): ######################################################
+        """
+        :param gt_boxes: BoxList containining the gt boxes for each image
+        :return:
+        """
+        orig_mode_list = [b.mode for b in gt_boxes]
+        gt_boxes = [b.convert('xywh') for b in gt_boxes]
+
+        proposal_density_list = []
+        gt_density_list = []
+
+        jittered_boxes = []
+        for gt_b in gt_boxes:
+            device = gt_b.bbox.device
+            b = gt_b.bbox.view(-1, 4).cpu()
+            labels = gt_b.get_field("labels")
+
+            out_boxes_list = []
+
+            for i in range(b.shape[0]):
+                proposals, proposal_density, gt_density = sample_box_gmm(b[i, :], self.proposal_sigma, self.gt_sigma,
+                                                                         self.num_proposal-1, True)
+
+                proposals = proposals.to(device)
+                proposal_density = proposal_density.to(device)
+                gt_density = gt_density.to(device)
+
+                out_boxes_list.append(proposals)
+                proposal_density_list.append(proposal_density)
+                gt_density_list.append(gt_density)
+
+            out_boxes_t = torch.cat(out_boxes_list, dim=0)
+
+            new_box = BoxList(out_boxes_t, image_size=gt_b.size, mode='xywh')
+            labels = labels.view(-1, 1).repeat(1, self.num_proposal)
+            new_box.add_field("labels", labels.view(-1))
+
+            jittered_boxes.append(new_box)
+
+        jittered_boxes = [b.convert(m) for b, m in zip(jittered_boxes, orig_mode_list)]
+
+        # TODO is this safe?
+        self._proposal_density = torch.cat(proposal_density_list, dim=0)
+        self._gt_density = torch.cat(gt_density_list, dim=0)
+        self._proposals = jittered_boxes
+
+        # TODO check output distribution
+        return jittered_boxes
+
+    def __call__(self, score): ##############################################################
+        """
+        Computes the loss for Faster R-CNN.
+        This requires that the subsample method has been called beforehand.
+
+        Arguments:
+            class_logits (list[Tensor])
+            box_regression (list[Tensor])
+
+        Returns:
+            classification_loss (Tensor)
+            box_loss (Tensor)
+        """
+
+        # (score has shape: (num_bboxes, 81)) (num_bboxes can be different for every batch, e.g. 13952, 20608, ...)
+
+        device = score.device
+
+        # TODO handle multi-class stuff
+        gt_density = self._gt_density # (shape: (num_bboxes))
+        proposal_density = self._proposal_density # (shape: (num_bboxes))
+
+        labels = cat([proposal.get_field("labels") for proposal in self._proposals], dim=0).long()
+
+        sampled_pos_inds_subset = torch.nonzero(labels > 0).squeeze(1)
+        labels_pos = labels[sampled_pos_inds_subset]
+
+        if self.cls_agnostic_iou_pred:
+            map_inds = torch.tensor([0], device=device)
+        else:
+            map_inds = labels_pos[:, None]
+
+        # (score[sampled_pos_inds_subset[:, None], map_inds].view(-1, self.num_proposal) has shape: (num_gt_bboxes_in_batch, M)) (M == 128) (num_bboxes_in_batch can be different for each batch, e.g. 151, 109, ...)
+        # (num_gt_bboxes_in_batch == num_bboxes/M) (score has shape: (num_bboxes, 81))
+        # (proposal_density[sampled_pos_inds_subset].view(-1, self.num_proposal) has shape: (num_gt-bboxes_in_batch, M))
+        # (gt_density[sampled_pos_inds_subset].view(-1, self.num_proposal) has shape: (num_gt_bboxes_in_batch, M))
+
+        iou_loss = ml_regression_loss_logsumexp(
+            score[sampled_pos_inds_subset[:, None], map_inds].view(-1, self.num_proposal),
+            proposal_density[sampled_pos_inds_subset].view(-1, self.num_proposal),
+            gt_density[sampled_pos_inds_subset].view(-1, self.num_proposal),
+            exp_max=10,
+            size_average=False,
+            mc_dim=1)
+        # (iou_loss has shape: (num_bboxes_in_batch)) (num_bboxes_in_batch can be different for each batch, e.g. 49, 68, 142, 127, ...)
+
+        iou_loss = iou_loss.sum() / (labels.numel() / self.num_proposal)
+
+        # (labels.numel() / self.num_proposal == num_bboxes_in_batch)
+        # (so, could also just have done iou_loss = torch.mean(iou_loss)?)
+
+        return iou_loss
+
+# class LossComputation_kldis(object): #########################################################################
+#     """
+#     """
+#
+#     def __init__(
+#         self,
+#         num_proposal=128,
+#         gt_sigma=(0.125, 0.125),
+#         proposal_sigma=((0.125, 0.125), (0.25, 0.25), (0.5, 0.5), (1.0, 1.0)),
+#         cls_agnostic_iou_pred=False,
+#         exp_clamp=None
+#     ):
+#         self.num_proposal = num_proposal
+#         self.gt_sigma = gt_sigma
+#         self.proposal_sigma = proposal_sigma
+#         self.cls_agnostic_iou_pred = cls_agnostic_iou_pred
+#         self.exp_clamp = exp_clamp
+#
+#     def sample_jittered_boxes(self, gt_boxes): ######################################################
+#         """
+#         :param gt_boxes: BoxList containining the gt boxes for each image
+#         :return:
+#         """
+#         orig_mode_list = [b.mode for b in gt_boxes]
+#         gt_boxes = [b.convert('xywh') for b in gt_boxes]
+#
+#         proposal_density_list = []
+#         gt_density_list = []
+#
+#         jittered_boxes = []
+#         for gt_b in gt_boxes:
+#             device = gt_b.bbox.device
+#             b = gt_b.bbox.view(-1, 4).cpu()
+#             labels = gt_b.get_field("labels")
+#
+#             out_boxes_list = []
+#
+#             for i in range(b.shape[0]):
+#                 proposals, proposal_density, gt_density = sample_box_gmm(b[i, :], self.proposal_sigma, self.gt_sigma,
+#                                                                          self.num_proposal, False)
+#
+#                 proposals = proposals.to(device)
+#                 proposal_density = proposal_density.to(device)
+#                 gt_density = gt_density.to(device)
+#
+#                 out_boxes_list.append(proposals)
+#                 proposal_density_list.append(proposal_density)
+#                 gt_density_list.append(gt_density)
+#
+#             out_boxes_t = torch.cat(out_boxes_list, dim=0)
+#
+#             new_box = BoxList(out_boxes_t, image_size=gt_b.size, mode='xywh')
+#             labels = labels.view(-1, 1).repeat(1, self.num_proposal)
+#             new_box.add_field("labels", labels.view(-1))
+#
+#             jittered_boxes.append(new_box)
+#
+#         jittered_boxes = [b.convert(m) for b, m in zip(jittered_boxes, orig_mode_list)]
+#
+#         # TODO is this safe?
+#         self._proposal_density = torch.cat(proposal_density_list, dim=0)
+#         self._gt_density = torch.cat(gt_density_list, dim=0)
+#         self._proposals = jittered_boxes
+#
+#         # TODO check output distribution
+#         return jittered_boxes
+#
+#     def __call__(self, score): ##############################################################
+#         """
+#         Computes the loss for Faster R-CNN.
+#         This requires that the subsample method has been called beforehand.
+#
+#         Arguments:
+#             class_logits (list[Tensor])
+#             box_regression (list[Tensor])
+#
+#         Returns:
+#             classification_loss (Tensor)
+#             box_loss (Tensor)
+#         """
+#
+#         # (score has shape: (num_bboxes, 81)) (num_bboxes can be different for every batch, e.g. 13952, 20608, ...)
+#
+#         device = score.device
+#
+#         # TODO handle multi-class stuff
+#         gt_density = self._gt_density # (shape: (num_bboxes))
+#         proposal_density = self._proposal_density # (shape: (num_bboxes))
+#
+#         labels = cat([proposal.get_field("labels") for proposal in self._proposals], dim=0).long()
+#
+#         sampled_pos_inds_subset = torch.nonzero(labels > 0).squeeze(1)
+#         labels_pos = labels[sampled_pos_inds_subset]
+#
+#         if self.cls_agnostic_iou_pred:
+#             map_inds = torch.tensor([0], device=device)
+#         else:
+#             map_inds = labels_pos[:, None]
+#
+#         # (score[sampled_pos_inds_subset[:, None], map_inds].view(-1, self.num_proposal) has shape: (num_gt_bboxes_in_batch, M)) (M == 128) (num_bboxes_in_batch can be different for each batch, e.g. 151, 109, ...)
+#         # (num_gt_bboxes_in_batch == num_bboxes/M) (score has shape: (num_bboxes, 81))
+#         # (proposal_density[sampled_pos_inds_subset].view(-1, self.num_proposal) has shape: (num_gt-bboxes_in_batch, M))
+#         # (gt_density[sampled_pos_inds_subset].view(-1, self.num_proposal) has shape: (num_gt_bboxes_in_batch, M))
+#
+#         iou_loss = kl_regression_loss_logsumexp(
+#             score[sampled_pos_inds_subset[:, None], map_inds].view(-1, self.num_proposal),
+#             proposal_density[sampled_pos_inds_subset].view(-1, self.num_proposal),
+#             gt_density[sampled_pos_inds_subset].view(-1, self.num_proposal),
+#             exp_max=10,
+#             size_average=False,
+#             mc_dim=1)
+#         # (iou_loss has shape: (num_bboxes_in_batch)) (num_bboxes_in_batch can be different for each batch, e.g. 49, 68, 142, 127, ...)
+#
+#         iou_loss = iou_loss.sum() / (labels.numel() / self.num_proposal)
+#
+#         # (labels.numel() / self.num_proposal == num_bboxes_in_batch)
+#         # (so, could also just have done iou_loss = torch.mean(iou_loss)?)
+#
+#         return iou_loss
+
 
 def make_roi_iou_loss_evaluator(cfg):
     num_proposal = cfg.MODEL.ROI_IOU_HEAD.NUM_TRAIN_PROPOSALS
@@ -632,28 +920,20 @@ def make_roi_iou_loss_evaluator(cfg):
     proposal_sigma = cfg.MODEL.ROI_IOU_HEAD.PROPOSAL_SIGMA
     gt_sigma = cfg.MODEL.ROI_IOU_HEAD.GT_SIGMA
 
-    if loss_type == "L2":
-        loss_evaluator = IoUNetLossComputation(num_proposal=num_proposal,
-                                               proposal_min_overlap=proposal_min_overlap,
-                                               cls_agnostic_iou_pred=cls_agnostic_iou_pred,
-                                               num_pre_generated_boxes=10000,
-                                               sampling_type=sampling_type,
-                                               proposal_sigma=proposal_sigma,
-                                               gt_sigma=gt_sigma
-                                               )
-    elif loss_type == "KL":
-        loss_evaluator = KLIoUNetLossComputation(num_proposal=num_proposal,
-                                                 gt_sigma=gt_sigma,
-                                                 proposal_sigma=proposal_sigma,
-                                                 cls_agnostic_iou_pred=cls_agnostic_iou_pred,
-                                                 )
-    elif loss_type == "ML":
-        loss_evaluator = MLIoUNetLossComputation(num_proposal=num_proposal,
-                                                 gt_sigma=gt_sigma,
-                                                 proposal_sigma=proposal_sigma,
-                                                 cls_agnostic_iou_pred=cls_agnostic_iou_pred,
-                                                 exp_clamp=None
-                                                 )
+    if loss_type == "ML-IS":
+        loss_evaluator = LossComputation_mlis(num_proposal=num_proposal,
+                                              gt_sigma=gt_sigma,
+                                              proposal_sigma=proposal_sigma,
+                                              cls_agnostic_iou_pred=cls_agnostic_iou_pred,
+                                              exp_clamp=None
+                                              )
+    elif loss_type == "KLD-IS":
+        loss_evaluator = LossComputation_kldis(num_proposal=num_proposal,
+                                              gt_sigma=gt_sigma,
+                                              proposal_sigma=proposal_sigma,
+                                              cls_agnostic_iou_pred=cls_agnostic_iou_pred,
+                                              exp_clamp=None
+                                              )
     else:
         raise ValueError
 
