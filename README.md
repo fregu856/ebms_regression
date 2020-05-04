@@ -194,6 +194,8 @@ $ sh start_docker_image_ebms_regression.sh
 $ cd --
 $ cd ebms_regression/detection
 $ python tools/train_net.py --config-file "configs/nce+_train.yaml"
+$ python tools/test_net.py --config-file "configs/nce+_eval_val.yaml"
+$ python tools/test_net.py --config-file "configs/nce+_eval_test-dev.yaml"
 ```
 ***
 ***
@@ -236,8 +238,8 @@ $ cd --
 $ python ebms_regression/1dregression/1/nce+_train.py 
 ```
 
-1dregression/1 contains all code for the first dataset, 1dregression/2 all code for the second dataset.
-
+- 1dregression/1 contains all code for the first dataset, 1dregression/2 all code for the second dataset.
+*
 - **1dregression/1/model.py**: Definition of the feed-forward DNN f_\theta(x, y). Identical to **1dregression/2/model.py**.
 - **1dregression/{1, 2}/datasets.py**: Definition of the {first, second} dataset.
 - **1dregression/{1, 2}/{{mlis, mlmcmcL16, kldis, nce, sm, dsm, nce+}}_train.py**: Train 20 models on the {first, second} dataset using {{ML-IS, ML-MCMC-16, KLD-IS, NCE, SM, DSM, NCE+}}.
@@ -265,7 +267,12 @@ $ python ebms_regression/1dregression/1/nce+_train.py
 
 - Example usage:
 ```
-TODO!
+$ sh start_docker_image_ebms_regression.sh
+$ cd --
+$ cd ebms_regression/detection
+$ python tools/train_net.py --config-file "configs/nce+_train.yaml"
+$ python tools/test_net.py --config-file "configs/nce+_eval_val.yaml"
+$ python tools/test_net.py --config-file "configs/nce+_eval_test-dev.yaml"
 ```
 
 - TODO!
