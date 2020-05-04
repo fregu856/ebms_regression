@@ -330,5 +330,16 @@ AP, AP50, AP75, APs, APm, APl
 - - scores.txt in the downloaded output_file.zip contains the results.
 - - Expected output:
 ```
-TODO! TODO!
+AP: 0.397
+AP_50: 0.587
+AP_75: 0.427
+AP_small: 0.221
+AP_medium: 0.420
+AP_large: 0.505
+AR_max_1: 0.331
+AR_max_10: 0.534
+AR_max_100: 0.564
+AR_small: 0.353
+AR_medium: 0.597
+AR_large: 0.717
 ```
