@@ -12,7 +12,7 @@ This repository contains code for the experiments on _**object detection**_ and 
 
 If you find this work useful, please consider citing:
 ```
-@article{gustafsson2020how,
+@article{gustafsson2020train,
   title={How to Train Your Energy-Based Model for Regression},
   author={Gustafsson, Fredrik K and Danelljan, Martin and Timofte, Radu and Sch{\"o}n, Thomas B},
   journal={arXiv preprint arXiv:2005.01698},
