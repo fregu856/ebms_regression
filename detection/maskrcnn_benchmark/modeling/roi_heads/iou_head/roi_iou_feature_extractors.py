@@ -36,11 +36,19 @@ class FPN2MLPFeatureExtractor(nn.Module):
         self.out_channels = representation_size
 
     def forward(self, x, proposals):
-        x = self.pooler(x, proposals)
-        x = x.view(x.size(0), -1)
+        # (x is a list of 5 elements)
+        # (x[0] has shape: (16, 256, h/4, w/4)) (not always exactly h/4, w/4)
+        # (x[1] has shape: (16, 256, h/8, w/8))
+        # (x[2] has shape: (16, 256, h/16, w/16))
+        # (x[3] has shape: (16, 256, h/32, w/32))
+        # (x[4] has shape: (16, 256, h/64, w/64))
+        # (x is a list of 16 elements, each element is a BoxList, num_boxes in each BoxList is M*{num_boxes for the corresponding BoxList in targets})
 
-        x = F.relu(self.fc6(x))
-        x = F.relu(self.fc7(x))
+        x = self.pooler(x, proposals) # (shape: (total_num_bboxes_in_batch, 256, 7, 7)) (total_num_bboxes_in_batch is different for each batch)
+        x = x.view(x.size(0), -1) # (shape: (total_num_bboxes_in_batch, 12544)) (12544 = 256*7*7)
+
+        x = F.relu(self.fc6(x)) # (shape: (total_num_bboxes_in_batch, 1024))
+        x = F.relu(self.fc7(x)) # (shape: (total_num_bboxes_in_batch, 1024))
 
         return x
 
