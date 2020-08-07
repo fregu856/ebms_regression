@@ -1,5 +1,7 @@
 # ebms_regression
 
+![overview image](ebms_regression.png)
+
 ![overview image](ebms_regression.jpg)
 
 Official implementation (PyTorch) of the paper: \
