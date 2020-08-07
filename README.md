@@ -3,10 +3,9 @@
 ![overview image](ebms_regression.png)
 
 Official implementation (PyTorch) of the papers: \
-**How to Train Your Energy-Based Model for Regression**, BMVC 2020 [[arXiv]](https://arxiv.org/abs/2005.01698) [[project]](http://www.fregu856.com/publication/ebms_regression/). \
-_[Fredrik K. Gustafsson](http://www.fregu856.com/), [Martin Danelljan](https://martin-danelljan.github.io/), [Radu Timofte](http://people.ee.ethz.ch/~timofter/), [Thomas B. Schön](http://user.it.uu.se/~thosc112/)._ 
-
-- _We propose a simple yet highly effective extension of noise contrastive estimation (NCE) to train energy-based models p(y|x; theta) for regression tasks. Our proposed method NCE+ can be understood as a direct generalization of NCE, accounting for noise in the annotation process of real-world datasets. We provide a detailed comparison of NCE+ and six popular methods from literature, the results of which suggest that NCE+ should be considered the go-to training method. We also apply NCE+ to the task of visual tracking, setting a new state-of-the-art on five commonly used datasets. Notably, our tracker achieves 63.7% AUC on LaSOT and 78.7% Success on TrackingNet._
+- **How to Train Your Energy-Based Model for Regression**, BMVC 2020 [[arXiv]](https://arxiv.org/abs/2005.01698) [[project]](http://www.fregu856.com/publication/ebms_regression/). \
+_[Fredrik K. Gustafsson](http://www.fregu856.com/), [Martin Danelljan](https://martin-danelljan.github.io/), [Radu Timofte](http://people.ee.ethz.ch/~timofter/), [Thomas B. Schön](http://user.it.uu.se/~thosc112/)._  \
+_We propose a simple yet highly effective extension of noise contrastive estimation (NCE) to train energy-based models p(y|x; theta) for regression tasks. Our proposed method NCE+ can be understood as a direct generalization of NCE, accounting for noise in the annotation process of real-world datasets. We provide a detailed comparison of NCE+ and six popular methods from literature, the results of which suggest that NCE+ should be considered the go-to training method. We also apply NCE+ to the task of visual tracking, setting a new state-of-the-art on five commonly used datasets. Notably, our tracker achieves 63.7% AUC on LaSOT and 78.7% Success on TrackingNet._
 
 This repository contains code for the experiments on _**object detection**_ and _**1D regression**_. Code for the _**visual tracking**_ experiments is available at [pytracking](https://github.com/visionml/pytracking).
 
