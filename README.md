@@ -2,8 +2,6 @@
 
 ![overview image](ebms_regression.png)
 
-![overview image](ebms_regression.jpg)
-
 Official implementation (PyTorch) of the paper: \
 **How to Train Your Energy-Based Model for Regression**, 2020 [[arXiv]](https://arxiv.org/abs/2005.01698) [[project]](http://www.fregu856.com/publication/ebms_regression/). \
 _[Fredrik K. Gustafsson](http://www.fregu856.com/), [Martin Danelljan](https://martin-danelljan.github.io/), [Radu Timofte](http://people.ee.ethz.ch/~timofter/), [Thomas B. Schön](http://user.it.uu.se/~thosc112/)._ 
