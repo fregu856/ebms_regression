@@ -1,6 +1,6 @@
 # ebms_regression
 
-![overview image](ebms_regression.jpg)
+![overview image](ebms_regression.png)
 
 Official implementation (PyTorch) of the paper: \
 **How to Train Your Energy-Based Model for Regression**, 2020 [[arXiv]](https://arxiv.org/abs/2005.01698) [[project]](http://www.fregu856.com/publication/ebms_regression/). \
