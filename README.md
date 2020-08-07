@@ -3,7 +3,7 @@
 ![overview image](ebms_regression.png)
 
 Official implementation (PyTorch) of the papers:
-- **Energy-Based Models for Deep Probabilistic Regression**, ECCV 2020 [[arXiv]](https://arxiv.org/abs/1909.12297) [[project]](http://www.fregu856.com/publication/dctd/). [[1 min video]](https://youtu.be/oacQnWV7XeI) [[10 min video]](https://youtu.be/PW8UzjxVwJo) \
+- **Energy-Based Models for Deep Probabilistic Regression**, ECCV 2020 [[arXiv]](https://arxiv.org/abs/1909.12297) [[project]](http://www.fregu856.com/publication/dctd/) [[1 min video]](https://youtu.be/oacQnWV7XeI). \
 [Fredrik K. Gustafsson](http://www.fregu856.com/), [Martin Danelljan](https://martin-danelljan.github.io/), [Goutam Bhat](https://vision.ee.ethz.ch/people-details.MjU4NjE4.TGlzdC8zMjg5LC0xOTcxNDY1MTc4.html), [Thomas B. Schön](http://user.it.uu.se/~thosc112/). \
 _We propose a general and conceptually simple regression method with a clear probabilistic interpretation. We create an energy-based model of the conditional target density p(y|x), using a deep neural network to predict the un-normalized density from the input-target pair (x,y). This model of p(y|x) is trained by directly minimizing the associated negative log-likelihood, approximated using Monte Carlo sampling. Notably, our model achieves a 2.2% AP improvement over Faster-RCNN for object detection on the COCO dataset, and sets a new state-of-the-art on visual tracking when applied for bounding box regression._
 
